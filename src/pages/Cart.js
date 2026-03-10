@@ -91,7 +91,7 @@ const Cart = () => {
 
   const handleRemove = async (productId) => {
     if (token) {
-      await removeFromCart(productId, token);
+      await removeFromCart(productId);
     }
   };
 
@@ -103,11 +103,11 @@ const Cart = () => {
     }
 
     if (delta === -1 && currentQuantity === 1) {
-      await removeFromCart(productId, token);
+      await removeFromCart(productId);
       return;
     }
 
-    await addToCart(productId, delta, token);
+    await addToCart(productId, delta);
   };
 
   const handleCheckout = async () => {
@@ -160,7 +160,7 @@ const Cart = () => {
                 razorpaySignature: response.razorpay_signature,
               });
               alert('Payment successful! Your order has been placed.');
-              clearCart(token);
+              clearCart();
               navigate('/payment-complete', { state: { orderId: createdOrder._id } });
             } catch (verifyError) {
               console.error('Payment verification failed:', verifyError);
@@ -184,7 +184,7 @@ const Cart = () => {
         razorpayObject.open();
       } else {
         alert('Order placed successfully!');
-        clearCart(token);
+        clearCart();
         navigate('/payment-complete', { state: { orderId: createdOrder._id } });
       }
     } catch (error) {

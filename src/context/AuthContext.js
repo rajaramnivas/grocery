@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
+import { authService } from '../services/api';
 
 const AuthContext = createContext();
 
@@ -13,12 +14,8 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     setLoading(true);
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await response.json();
+      const response = await authService.login(email, password);
+      const data = response.data;
       if (data.token) {
         setToken(data.token);
         setUser(data.user);
@@ -36,12 +33,8 @@ export const AuthProvider = ({ children }) => {
   const register = async (name, email, password, phone) => {
     setLoading(true);
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, phone }),
-      });
-      const data = await response.json();
+      const response = await authService.register(name, email, password, phone);
+      const data = response.data;
       if (data.token) {
         setToken(data.token);
         setUser(data.user);

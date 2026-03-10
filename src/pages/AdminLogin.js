@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { authService } from '../services/api';
 
 const AdminLogin = () => {
   const [formData, setFormData] = useState({
@@ -23,21 +24,8 @@ const AdminLogin = () => {
     setError('');
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.message || 'Login failed');
-        return;
-      }
+      const response = await authService.login(formData.email, formData.password);
+      const data = response.data;
 
       // Check if user is admin
       if (data.user.role !== 'admin') {
@@ -52,7 +40,7 @@ const AdminLogin = () => {
         navigate('/admin-dashboard');
       }
     } catch (err) {
-      setError('Login error: ' + err.message);
+      setError(err.response?.data?.message || 'Login error: ' + err.message);
     } finally {
       setLoading(false);
     }

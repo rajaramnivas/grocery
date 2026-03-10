@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
+import { cartService } from '../services/api';
 
 const CartContext = createContext();
 
@@ -6,15 +7,12 @@ export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const getCart = async (token) => {
+  const getCart = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/cart', {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-      const data = await response.json();
-      setCart(data);
-      return data;
+      const response = await cartService.getCart();
+      setCart(response.data);
+      return response.data;
     } catch (error) {
       console.error('Error fetching cart:', error);
     } finally {
@@ -22,44 +20,29 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const addToCart = async (productId, quantity, token) => {
+  const addToCart = async (productId, quantity) => {
     try {
-      const response = await fetch('/api/cart/add', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ productId, quantity }),
-      });
-      const data = await response.json();
-      setCart(data);
-      return data;
+      const response = await cartService.addToCart(productId, quantity);
+      setCart(response.data);
+      return response.data;
     } catch (error) {
       console.error('Error adding to cart:', error);
     }
   };
 
-  const removeFromCart = async (productId, token) => {
+  const removeFromCart = async (productId) => {
     try {
-      const response = await fetch(`/api/cart/remove/${productId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-      const data = await response.json();
-      setCart(data);
-      return data;
+      const response = await cartService.removeFromCart(productId);
+      setCart(response.data);
+      return response.data;
     } catch (error) {
       console.error('Error removing from cart:', error);
     }
   };
 
-  const clearCart = async (token) => {
+  const clearCart = async () => {
     try {
-      await fetch('/api/cart/clear', {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
+      await cartService.clearCart();
       setCart(null);
     } catch (error) {
       console.error('Error clearing cart:', error);

@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { authService } from '../services/api';
 
 const AdminRegister = () => {
   const [formData, setFormData] = useState({
@@ -42,26 +43,13 @@ const AdminRegister = () => {
     }
 
     try {
-      const response = await fetch('/api/auth/register-admin', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${authToken}`,
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          phone: formData.phone,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.message || 'Admin registration failed');
-        return;
-      }
+      const response = await authService.registerAdmin(
+        formData.name,
+        formData.email,
+        formData.password,
+        formData.phone
+      );
+      const data = response.data;
 
       if (data.token) {
         // Save token and user info
@@ -70,7 +58,7 @@ const AdminRegister = () => {
         navigate('/');
       }
     } catch (err) {
-      setError('Registration error: ' + err.message);
+      setError(err.response?.data?.message || 'Registration error: ' + err.message);
     } finally {
       setLoading(false);
     }

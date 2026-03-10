@@ -19,6 +19,8 @@ export const authService = {
     axiosInstance.post('/auth/login', { email, password }),
   register: (name, email, password, phone) =>
     axiosInstance.post('/auth/register', { name, email, password, phone }),
+  registerAdmin: (name, email, password, phone) =>
+    axiosInstance.post('/auth/register-admin', { name, email, password, phone }),
   getCurrentUser: () =>
     axiosInstance.get('/auth/me'),
 };

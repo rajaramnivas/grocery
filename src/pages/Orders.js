@@ -74,7 +74,7 @@ const Orders = () => {
       
       // Update cart in context
       if (token) {
-        await getCart(token);
+        await getCart();
       }
       
       // Show success message

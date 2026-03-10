@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import financeService from '../services/financeService';
+import { productService } from '../services/api';
 import ProfitTrendChart from '../components/ProfitTrendChart';
 import TopPerformersChart from '../components/TopPerformersChart';
 import CategoryBreakdownChart from '../components/CategoryBreakdownChart';
@@ -170,12 +171,8 @@ const ProductFinanceTracking = () => {
 
   const fetchProducts = useCallback(async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/products', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('adminToken') || localStorage.getItem('token')}`,
-        },
-      });
-      const data = await response.json();
+      const response = await productService.getProducts();
+      const data = response.data;
       setProducts(Array.isArray(data) ? data : data.data || []);
     } catch (error) {
       console.error('Error fetching products:', error);
