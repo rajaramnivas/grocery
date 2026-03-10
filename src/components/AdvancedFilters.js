@@ -23,16 +23,6 @@ const AdvancedFilters = ({ onChange, products }) => {
     onChange(newFilters);
   };
 
-  const handleProductToggle = (productId) => {
-    const newSelected = filters.selectedProducts.includes(productId)
-      ? filters.selectedProducts.filter(id => id !== productId)
-      : [...filters.selectedProducts, productId];
-    
-    const newFilters = { ...filters, selectedProducts: newSelected };
-    setFilters(newFilters);
-    onChange(newFilters);
-  };
-
   const handleReset = () => {
     const resetFilters = {
       searchText: '',

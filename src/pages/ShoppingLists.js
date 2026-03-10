@@ -5,7 +5,7 @@ import { shoppingListService, cartService } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import EcoFriendlyBadge from '../components/EcoFriendlyBadge';
 import ProductTags from '../components/ProductTags';
-import { getProductImageUrl, getListIconUrl, getFallbackImageUrl } from '../utils/imageUtils';
+import { getProductImageUrl, getFallbackImageUrl } from '../utils/imageUtils';
 
 const ShoppingLists = () => {
   const [lists, setLists] = useState([]);

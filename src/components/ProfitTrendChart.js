@@ -30,8 +30,7 @@ const ProfitTrendChart = ({ finances }) => {
     if (!profitData[dateStr]) {
       profitData[dateStr] = { revenue: 0, cost: 0 };
     }
-    
-    const profit = (finance.sellingPrice - finance.costPrice) * finance.quantity;
+
     const cost = finance.costPrice * finance.quantity;
     const revenue = finance.sellingPrice * finance.quantitySold || 0;
     

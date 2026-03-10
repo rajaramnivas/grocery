@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { adminShoppingListService, productService } from '../services/api';
-import { useNavigate } from 'react-router-dom';
 
 const AdminShoppingLists = () => {
   const [lists, setLists] = useState([]);
@@ -10,7 +9,6 @@ const AdminShoppingLists = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [message, setMessage] = useState(null);
   const [isAuthorized, setIsAuthorized] = useState(true);
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -21,6 +19,8 @@ const AdminShoppingLists = () => {
   });
   const [selectedProducts, setSelectedProducts] = useState([]);
 
+  // We intentionally only want this effect to run once on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchLists();
     fetchAllProducts();

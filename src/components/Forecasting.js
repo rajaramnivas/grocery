@@ -18,8 +18,8 @@ const Forecasting = ({ finances }) => {
       const projectedDaysUntilStockOut = dailySalesRate > 0 ? Math.floor(currentStock / dailySalesRate) : 999;
       const willStockOutInForecastPeriod = projectedDaysUntilStockOut <= forecastDays;
 
-      // Calculate recommended reorder quantity
-      const recommendedReorderQty = Math.ceil(dailySalesRate * forecastDays * 1.2); // 20% buffer
+      // Calculate recommended reorder quantity with seasonal adjustment
+      const baseReorderQty = Math.ceil(dailySalesRate * forecastDays * 1.2); // 20% buffer
       const safetyStock = Math.ceil(dailySalesRate * 7); // 1 week safety stock
 
       // Reorder point calculation
@@ -40,8 +40,8 @@ const Forecasting = ({ finances }) => {
         seasonalFactor = 0.8; // 20% lower at beginning/end
       }
 
-      // Adjusting forecast with seasonal factor
-      const seasonallyAdjustedForecast = Math.ceil(recommendedReorderQty * seasonalFactor);
+      // Adjust recommended quantity with seasonal factor
+      const recommendedReorderQty = Math.ceil(baseReorderQty * seasonalFactor);
 
       forecasts.push({
         productId: finance._id,
@@ -78,7 +78,6 @@ const Forecasting = ({ finances }) => {
   const mediumUrgency = filteredForecasts.filter(f => f.urgency === 'medium').length;
   const totalProjectedRevenue = filteredForecasts.reduce((sum, f) => sum + f.projectedRevenue, 0);
   const totalProjectedProfit = filteredForecasts.reduce((sum, f) => sum + f.projectedProfit, 0);
-  const totalRecommendedStockInvestment = filteredForecasts.reduce((sum, f) => sum + (f.recommendedReorderQty * f.productId?.costPrice || 0), 0);
 
   const getUrgencyColor = (urgency) => {
     switch (urgency) {

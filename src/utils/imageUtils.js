@@ -90,7 +90,7 @@ export const imageSourceGuide = {
   'DummyImage': 'https://dummyimage.com/300x200/000000/CCCCCC?text=Product',
 };
 
-export default {
+const imageUtils = {
   getProductImageUrl,
   getListIconUrl,
   getPlaceholderUrl,
@@ -98,3 +98,5 @@ export default {
   getFallbackImageUrl,
   imageSourceGuide,
 };
+
+export default imageUtils;

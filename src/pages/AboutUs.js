@@ -1,14 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const AboutUs = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [scrollToSection, setScrollToSection] = useState(null);
 
   useEffect(() => {
     if (location.state?.section) {
-      setScrollToSection(location.state.section);
       // Scroll to section after a short delay to allow rendering
       setTimeout(() => {
         const element = document.getElementById(location.state.section);

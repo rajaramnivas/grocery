@@ -11,6 +11,113 @@ import StockHistory from '../components/StockHistory';
 import SupplierManagement from '../components/SupplierManagement';
 import Forecasting from '../components/Forecasting';
 
+const getDaysUntilExpiry = (expiryDate) => {
+  const today = new Date();
+  const expiry = new Date(expiryDate);
+  const diffTime = expiry - today;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays;
+};
+
+const applyAdvancedFilters = (financesData, filters) => {
+  if (!filters) return financesData;
+
+  let result = financesData;
+
+  // Text search
+  if (filters.searchText) {
+    const searchLower = filters.searchText.toLowerCase();
+    result = result.filter(f =>
+      f.productId.name.toLowerCase().includes(searchLower) ||
+      (f.productId.sku && f.productId.sku.toLowerCase().includes(searchLower))
+    );
+  }
+
+  // Category filter
+  if (filters.category) {
+    result = result.filter(f => f.productId.category === filters.category);
+  }
+
+  // Status filter
+  if (filters.statusFilter) {
+    result = result.filter(f => {
+      const daysToExpiry = getDaysUntilExpiry(f.expiryDate);
+      const stockRemaining = f.quantity - (f.quantitySold || 0);
+
+      switch (filters.statusFilter) {
+        case 'active':
+          return daysToExpiry > 7 && stockRemaining > 0;
+        case 'about_to_expire':
+          return daysToExpiry > 0 && daysToExpiry <= 7;
+        case 'expired':
+          return daysToExpiry < 0;
+        case 'out_of_stock':
+          return stockRemaining <= 0;
+        case 'low_stock':
+          return stockRemaining > 0 && stockRemaining <= Math.ceil(f.quantity * 0.1);
+        default:
+          return true;
+      }
+    });
+  }
+
+  // Profit range
+  if (filters.profitMin || filters.profitMax) {
+    result = result.filter(f => {
+      const totalProfit = (f.sellingPrice - f.costPrice) * (f.quantitySold || 0);
+      const minOk = !filters.profitMin || totalProfit >= parseFloat(filters.profitMin);
+      const maxOk = !filters.profitMax || totalProfit <= parseFloat(filters.profitMax);
+      return minOk && maxOk;
+    });
+  }
+
+  // Expiry days range
+  if (filters.expiryDaysMin || filters.expiryDaysMax) {
+    result = result.filter(f => {
+      const days = getDaysUntilExpiry(f.expiryDate);
+      const minOk = !filters.expiryDaysMin || days >= parseFloat(filters.expiryDaysMin);
+      const maxOk = !filters.expiryDaysMax || days <= parseFloat(filters.expiryDaysMax);
+      return minOk && maxOk;
+    });
+  }
+
+  // Stock level range
+  if (filters.stockLevelMin || filters.stockLevelMax) {
+    result = result.filter(f => {
+      const stockRemaining = f.quantity - (f.quantitySold || 0);
+      const minOk = !filters.stockLevelMin || stockRemaining >= parseFloat(filters.stockLevelMin);
+      const maxOk = !filters.stockLevelMax || stockRemaining <= parseFloat(filters.stockLevelMax);
+      return minOk && maxOk;
+    });
+  }
+
+  // Sorting
+  if (filters.sortBy) {
+    result.sort((a, b) => {
+      switch (filters.sortBy) {
+        case 'newest':
+          return new Date(b.buyingDate) - new Date(a.buyingDate);
+        case 'oldest':
+          return new Date(a.buyingDate) - new Date(b.buyingDate);
+        case 'profit_high':
+          return ((b.sellingPrice - b.costPrice) * (b.quantitySold || 0)) - ((a.sellingPrice - a.costPrice) * (a.quantitySold || 0));
+        case 'profit_low':
+          return ((a.sellingPrice - a.costPrice) * (a.quantitySold || 0)) - ((b.sellingPrice - b.costPrice) * (b.quantitySold || 0));
+        case 'expiry_soon':
+          return getDaysUntilExpiry(a.expiryDate) - getDaysUntilExpiry(b.expiryDate);
+        case 'stock_high':
+          return (b.quantity - (b.quantitySold || 0)) - (a.quantity - (a.quantitySold || 0));
+        case 'stock_low':
+          return (a.quantity - (a.quantitySold || 0)) - (b.quantity - (b.quantitySold || 0));
+        default:
+          return 0;
+      }
+    });
+  }
+
+  return result;
+};
+
 const ProductFinanceTracking = () => {
   const [finances, setFinances] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,6 +147,8 @@ const ProductFinanceTracking = () => {
 
   const [products, setProducts] = useState([]);
 
+  // We intentionally only want this effect to run once on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchFinances();
     fetchSummary();
@@ -195,113 +304,6 @@ const ProductFinanceTracking = () => {
       default:
         return 'bg-blue-100 text-blue-800';
     }
-  };
-
-  const getDaysUntilExpiry = (expiryDate) => {
-    const today = new Date();
-    const expiry = new Date(expiryDate);
-    const diffTime = expiry - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
-
-  const applyAdvancedFilters = (financesData, filters) => {
-    if (!filters) return financesData;
-
-    let result = financesData;
-
-    // Text search
-    if (filters.searchText) {
-      const searchLower = filters.searchText.toLowerCase();
-      result = result.filter(f =>
-        f.productId.name.toLowerCase().includes(searchLower) ||
-        (f.productId.sku && f.productId.sku.toLowerCase().includes(searchLower))
-      );
-    }
-
-    // Category filter
-    if (filters.category) {
-      result = result.filter(f => f.productId.category === filters.category);
-    }
-
-    // Status filter
-    if (filters.statusFilter) {
-      result = result.filter(f => {
-        const daysToExpiry = getDaysUntilExpiry(f.expiryDate);
-        const stockRemaining = f.quantity - (f.quantitySold || 0);
-
-        switch (filters.statusFilter) {
-          case 'active':
-            return daysToExpiry > 7 && stockRemaining > 0;
-          case 'about_to_expire':
-            return daysToExpiry > 0 && daysToExpiry <= 7;
-          case 'expired':
-            return daysToExpiry < 0;
-          case 'out_of_stock':
-            return stockRemaining <= 0;
-          case 'low_stock':
-            return stockRemaining > 0 && stockRemaining <= Math.ceil(f.quantity * 0.1);
-          default:
-            return true;
-        }
-      });
-    }
-
-    // Profit range
-    if (filters.profitMin || filters.profitMax) {
-      result = result.filter(f => {
-        const totalProfit = (f.sellingPrice - f.costPrice) * (f.quantitySold || 0);
-        const minOk = !filters.profitMin || totalProfit >= parseFloat(filters.profitMin);
-        const maxOk = !filters.profitMax || totalProfit <= parseFloat(filters.profitMax);
-        return minOk && maxOk;
-      });
-    }
-
-    // Expiry days range
-    if (filters.expiryDaysMin || filters.expiryDaysMax) {
-      result = result.filter(f => {
-        const days = getDaysUntilExpiry(f.expiryDate);
-        const minOk = !filters.expiryDaysMin || days >= parseFloat(filters.expiryDaysMin);
-        const maxOk = !filters.expiryDaysMax || days <= parseFloat(filters.expiryDaysMax);
-        return minOk && maxOk;
-      });
-    }
-
-    // Stock level range
-    if (filters.stockLevelMin || filters.stockLevelMax) {
-      result = result.filter(f => {
-        const stockRemaining = f.quantity - (f.quantitySold || 0);
-        const minOk = !filters.stockLevelMin || stockRemaining >= parseFloat(filters.stockLevelMin);
-        const maxOk = !filters.stockLevelMax || stockRemaining <= parseFloat(filters.stockLevelMax);
-        return minOk && maxOk;
-      });
-    }
-
-    // Sorting
-    if (filters.sortBy) {
-      result.sort((a, b) => {
-        switch (filters.sortBy) {
-          case 'newest':
-            return new Date(b.buyingDate) - new Date(a.buyingDate);
-          case 'oldest':
-            return new Date(a.buyingDate) - new Date(b.buyingDate);
-          case 'profit_high':
-            return ((b.sellingPrice - b.costPrice) * (b.quantitySold || 0)) - ((a.sellingPrice - a.costPrice) * (a.quantitySold || 0));
-          case 'profit_low':
-            return ((a.sellingPrice - a.costPrice) * (a.quantitySold || 0)) - ((b.sellingPrice - b.costPrice) * (b.quantitySold || 0));
-          case 'expiry_soon':
-            return getDaysUntilExpiry(a.expiryDate) - getDaysUntilExpiry(b.expiryDate);
-          case 'stock_high':
-            return (b.quantity - (b.quantitySold || 0)) - (a.quantity - (a.quantitySold || 0));
-          case 'stock_low':
-            return (a.quantity - (a.quantitySold || 0)) - (b.quantity - (b.quantitySold || 0));
-          default:
-            return 0;
-        }
-      });
-    }
-
-    return result;
   };
 
   useEffect(() => {
