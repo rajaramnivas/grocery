@@ -1,0 +1,1214 @@
+import React, { useState, useEffect } from 'react';
+import { adminService, productService } from '../services/api';
+import AdminShoppingLists from './AdminShoppingLists';
+
+// Local SVG placeholder to avoid external image requests
+const INVENTORY_PLACEHOLDER_IMAGE =
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><rect width='100%' height='100%' fill='%23e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%239ca3af' font-size='10'>No Image</text></svg>";
+const AdminDashboard = () => {
+  const [activeTab, setActiveTab] = useState('orders');
+  const [orders, setOrders] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [dailyDeals, setDailyDeals] = useState([]);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [dealMessage, setDealMessage] = useState(null);
+  const [ecoMessage, setEcoMessage] = useState(null);
+  const [productForm, setProductForm] = useState({
+    name: '',
+    description: '',
+    price: '',
+    costPrice: '',
+    buyingDate: '',
+    category: 'Rice & Grains',
+    stock: '',
+    image: '',
+    rating: 4.0,
+    sku: ''
+  });
+
+  useEffect(() => {
+    if (activeTab === 'orders') {
+      fetchOrders();
+    } else if (activeTab === 'inventory') {
+      fetchProducts();
+    } else if (activeTab === 'deals') {
+      // For Daily Deals tab, we need both:
+      // - current deals (to show which products are active deals)
+      // - full product list (so admin can pick 3–5 products)
+      fetchDailyDeals();
+      fetchProducts();
+    } else if (activeTab === 'eco') {
+      fetchProducts();
+    }
+    // Shopping lists tab has its own component that handles fetching
+  }, [activeTab]);
+
+  // Auto-refresh inventory data periodically when on the Inventory tab
+  useEffect(() => {
+    if (activeTab !== 'inventory') return;
+
+    const intervalId = setInterval(() => {
+      // Avoid refreshing while editing/adding a product to prevent UI glitches
+      if (!showProductModal) {
+        refreshInventorySilently();
+      }
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(intervalId);
+  }, [activeTab, showProductModal]);
+
+  const fetchOrders = async () => {
+    setLoading(true);
+    try {
+      const response = await adminService.getAllOrders();
+      setOrders(response.data);
+    } catch (error) {
+      alert('Error fetching orders: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchProducts = async () => {
+    setLoading(true);
+    try {
+      const response = await productService.getProducts();
+      setProducts(response.data);
+    } catch (error) {
+      alert('Error fetching products: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const refreshInventorySilently = async () => {
+    try {
+      const response = await productService.getProducts();
+      setProducts(response.data);
+    } catch (error) {
+      console.error('Error auto-refreshing inventory:', error.response?.data || error.message);
+    }
+  };
+
+  const fetchDailyDeals = async () => {
+    setLoading(true);
+    try {
+      const response = await adminService.getDailyDeals();
+      setDailyDeals(response.data);
+    } catch (error) {
+      alert('Error fetching daily deals: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleDailyDeal = async (productId) => {
+    try {
+      const response = await adminService.setDailyDeal(productId);
+      setDealMessage({ type: 'success', text: response.data.message });
+      fetchDailyDeals();
+      fetchProducts();
+      setTimeout(() => setDealMessage(null), 3000);
+    } catch (error) {
+      setDealMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Error updating daily deal'
+      });
+      setTimeout(() => setDealMessage(null), 3000);
+    }
+  };
+
+  const handleToggleOrganic = async (productId) => {
+    try {
+      const response = await adminService.toggleOrganic(productId);
+      setEcoMessage({ type: 'success', text: response.data.message });
+      fetchProducts();
+      setTimeout(() => setEcoMessage(null), 3000);
+    } catch (error) {
+      setEcoMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Error updating organic status'
+      });
+      setTimeout(() => setEcoMessage(null), 3000);
+    }
+  };
+
+  const handleToggleLocal = async (productId) => {
+    try {
+      const response = await adminService.toggleLocal(productId);
+      setEcoMessage({ type: 'success', text: response.data.message });
+      fetchProducts();
+      setTimeout(() => setEcoMessage(null), 3000);
+    } catch (error) {
+      setEcoMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Error updating local status'
+      });
+      setTimeout(() => setEcoMessage(null), 3000);
+    }
+  };
+
+  const handleToggleFresh = async (productId) => {
+    try {
+      const response = await adminService.toggleFresh(productId);
+      setEcoMessage({ type: 'success', text: response.data.message });
+      fetchProducts();
+      setTimeout(() => setEcoMessage(null), 3000);
+    } catch (error) {
+      setEcoMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Error updating freshness status'
+      });
+      setTimeout(() => setEcoMessage(null), 3000);
+    }
+  };
+
+  const handleUpdateOrderStatus = async (orderId, status, paymentStatus, promptForNotes = true) => {
+    try {
+      const notes = promptForNotes ? prompt('Add admin notes (optional):') : '';
+      const trackingNumber = '';
+      await adminService.updateOrderStatus(orderId, status, paymentStatus, trackingNumber, notes);
+      alert('Order status updated successfully');
+      fetchOrders();
+      setSelectedOrder(null);
+    } catch (error) {
+      alert('Error updating order: ' + (error.response?.data?.message || error.message));
+    }
+  };
+
+  const handleUpdateInventory = async (productId, currentStock) => {
+    const newStock = prompt(`Current stock: ${currentStock}\nEnter new stock quantity:`, currentStock);
+    if (newStock !== null && !isNaN(newStock)) {
+      try {
+        await adminService.updateInventory(productId, parseInt(newStock));
+        alert('Inventory updated successfully');
+        fetchProducts();
+      } catch (error) {
+        alert('Error updating inventory: ' + (error.response?.data?.message || error.message));
+      }
+    }
+  };
+
+  const handleAddProduct = () => {
+    setEditingProduct(null);
+    setProductForm({
+      name: '',
+      description: '',
+      price: '',
+      costPrice: '',
+      category: 'Vegetables',
+      stock: '',
+      image: '',
+      rating: 4.0,
+      sku: '',
+      buyingDate: ''
+    });
+    setShowProductModal(true);
+  };
+
+  const handleEditProduct = (product) => {
+    setEditingProduct(product);
+    setProductForm({
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      costPrice: product.costPrice || '',
+      category: product.category,
+      stock: product.stock,
+      image: product.image || '',
+      rating: product.rating || 4.0,
+      sku: product.sku || '',
+      buyingDate: product.buyingDate ? product.buyingDate.split('T')[0] : ''
+    });
+    setShowProductModal(true);
+  };
+
+  const handleDeleteProduct = async (productId, productName) => {
+    if (window.confirm(`Are you sure you want to delete "${productName}"?`)) {
+      try {
+        await adminService.deleteProduct(productId);
+        alert('Product deleted successfully');
+        fetchProducts();
+      } catch (error) {
+        alert('Error deleting product: ' + (error.response?.data?.message || error.message));
+      }
+    }
+  };
+
+  const handleProductFormChange = (e) => {
+    const { name, value } = e.target;
+    setProductForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleProductSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const productData = {
+        ...productForm,
+        price: parseFloat(productForm.price),
+        costPrice: productForm.costPrice ? parseFloat(productForm.costPrice) : undefined,
+        buyingDate: productForm.buyingDate ? new Date(productForm.buyingDate) : undefined,
+        stock: parseInt(productForm.stock),
+        rating: parseFloat(productForm.rating)
+      };
+
+      // If SKU is not provided, avoid sending an empty string to the backend
+      // so Mongo's unique index on sku does not see duplicate "" values.
+      if (!productForm.sku || productForm.sku.trim() === '') {
+        delete productData.sku;
+      } else {
+        productData.sku = productForm.sku.trim();
+      }
+
+      if (editingProduct) {
+        await adminService.updateProduct(editingProduct._id, productData);
+        alert('Product updated successfully');
+      } else {
+        await adminService.createProduct(productData);
+        alert('Product created successfully');
+      }
+
+      setShowProductModal(false);
+      fetchProducts();
+    } catch (error) {
+      alert('Error saving product: ' + (error.response?.data?.message || error.message));
+    }
+  };
+
+  const calculateProfit = (product) => {
+    if (!product.costPrice || !product.price) return null;
+    const profitPerUnit = product.price - product.costPrice;
+    const totalProfit = profitPerUnit * product.stock;
+    const profitMargin = ((profitPerUnit / product.price) * 100).toFixed(2);
+    return {
+      profitPerUnit: profitPerUnit.toFixed(2),
+      totalProfit: totalProfit.toFixed(2),
+      profitMargin: profitMargin
+    };
+  };
+
+  const getStatusBadgeClass = (status) => {
+    const classes = {
+      pending: 'bg-orange-500',
+      processing: 'bg-blue-500',
+      delivered: 'bg-green-500',
+      cancelled: 'bg-red-500',
+    };
+    return classes[status] || 'bg-gray-500';
+  };
+
+  const getStockColor = (stock) => {
+    if (stock === 0) return 'text-danger font-bold';
+    if (stock < 10) return 'text-orange-600 font-bold';
+    return 'text-success font-bold';
+  };
+
+  const renderOrderDetails = () => {
+    if (!selectedOrder) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+        <div
+          className="bg-white rounded-lg max-w-2xl w-full p-8 flex flex-column"
+          style={{ maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}
+        >
+          <h2 className="text-2xl font-bold text-primary mb-6">Order Details - #{selectedOrder._id.slice(-8)}</h2>
+
+          <div className="overflow-auto" style={{ flex: 1 }}>
+          <div className="mb-6">
+            <h3 className="text-lg font-bold text-primary mb-3">Customer Information</h3>
+            <div className="space-y-2">
+              <p><strong>Name:</strong> {selectedOrder.userId?.name || 'N/A'}</p>
+              <p><strong>Email:</strong> {selectedOrder.userId?.email || 'N/A'}</p>
+              <p><strong>Phone:</strong> {selectedOrder.userId?.phone || 'N/A'}</p>
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <h3 className="text-lg font-bold text-primary mb-3">Order Information</h3>
+            <div className="space-y-2">
+              <p><strong>Order Date:</strong> {new Date(selectedOrder.createdAt).toLocaleString()}</p>
+              <p><strong>Payment Method:</strong> {selectedOrder.paymentMethod.replace('_', ' ').toUpperCase()}</p>
+              <p>
+                <strong>Status:</strong>{' '}
+                <span className={`inline-block ml-2 px-3 py-1 rounded text-white text-sm ${getStatusBadgeClass(selectedOrder.status)}`}>
+                  {selectedOrder.status.toUpperCase()}
+                </span>
+              </p>
+              <p><strong>Payment Status:</strong> {selectedOrder.paymentStatus}</p>
+              {selectedOrder.trackingNumber && (
+                <p><strong>Tracking:</strong> {selectedOrder.trackingNumber}</p>
+              )}
+            </div>
+          </div>
+
+          {selectedOrder.notes && selectedOrder.notes.trim() && (
+            <div className="mb-6 p-4 bg-yellow-50 border-2 border-yellow-400 rounded-lg">
+              <h3 className="text-lg font-bold text-orange-700 mb-2 flex items-center">
+                📝 Special Instructions from Customer
+              </h3>
+              <p className="text-gray-800 font-medium italic">"{selectedOrder.notes}"</p>
+            </div>
+          )}
+
+          {selectedOrder.adminNotes && selectedOrder.adminNotes.trim() && (
+            <div className="mb-6 p-4 bg-gray-50 border-2 border-gray-300 rounded-lg">
+              <h3 className="text-lg font-bold text-gray-800 mb-2 flex items-center">
+                🧾 Admin Notes / Status History
+              </h3>
+              <p className="text-gray-700 font-medium">{selectedOrder.adminNotes}</p>
+            </div>
+          )}
+
+          {selectedOrder.feedback && selectedOrder.feedback.rating && (
+            <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-400 rounded-lg">
+              <h3 className="text-lg font-bold text-blue-700 mb-3 flex items-center">
+                ⭐ Customer Feedback
+              </h3>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-gray-700">Rating:</span>
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <span key={star} className={`text-xl ${star <= selectedOrder.feedback.rating ? 'text-yellow-500' : 'text-gray-300'}`}>
+                        ★
+                      </span>
+                    ))}
+                  </div>
+                  <span className="text-lg font-bold text-blue-700">
+                    {selectedOrder.feedback.rating}/5
+                  </span>
+                </div>
+                {selectedOrder.feedback.comment && selectedOrder.feedback.comment.trim() && (
+                  <div>
+                    <span className="text-sm font-semibold text-gray-700">Comment:</span>
+                    <p className="text-gray-800 italic mt-1">"{selectedOrder.feedback.comment}"</p>
+                  </div>
+                )}
+                <p className="text-xs text-gray-500">
+                  Submitted on {new Date(selectedOrder.feedback.submittedAt).toLocaleString()}
+                </p>
+              </div>
+            </div>
+          )}
+
+          <div className="mb-6">
+            <h3 className="text-lg font-bold text-primary mb-3">Shipping Address</h3>
+            <div className="text-gray-700">
+              <p>{selectedOrder.shippingAddress.street}</p>
+              <p>{selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.state}</p>
+              <p>{selectedOrder.shippingAddress.zipCode}, {selectedOrder.shippingAddress.country}</p>
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <h3 className="text-lg font-bold text-primary mb-3">Items</h3>
+            <div className="space-y-2">
+              {selectedOrder.items.map((item, index) => (
+                <div key={index} className="p-3 bg-gray-50 rounded-lg">
+                  <p className="font-bold text-primary">{item.name}</p>
+                  <p className="text-sm text-gray-600">Quantity: {item.quantity} × ₹{item.price} = ₹{item.quantity * item.price}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="p-4 bg-green-50 border border-green-300 rounded-lg mb-6">
+            <h3 className="font-bold text-lg text-success">Total Amount: ₹{selectedOrder.totalAmount}</h3>
+          </div>
+
+          <div className="mb-6">
+            <h3 className="text-lg font-bold text-primary mb-3">Update Order Status</h3>
+            <div className="flex flex-wrap gap-3">
+              {selectedOrder.status === 'pending' && (
+                <button
+                  onClick={() => handleUpdateOrderStatus(selectedOrder._id, 'processing', 'pending', false)}
+                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                >
+                  Approve & Process
+                </button>
+              )}
+              {selectedOrder.status === 'processing' && (
+                <button
+                  onClick={() => handleUpdateOrderStatus(selectedOrder._id, 'delivered', selectedOrder.paymentMethod === 'cash_on_delivery' ? 'completed' : 'pending', false)}
+                  className="px-4 py-2 bg-success text-white rounded hover:bg-green-700 transition-colors"
+                >
+                  Mark as Delivered
+                </button>
+              )}
+              {selectedOrder.status !== 'cancelled' && selectedOrder.status !== 'delivered' && (
+                <button
+                  onClick={() => handleUpdateOrderStatus(selectedOrder._id, 'cancelled', 'failed')}
+                  className="px-4 py-2 bg-danger text-white rounded hover:bg-red-700 transition-colors"
+                >
+                  Cancel Order
+                </button>
+              )}
+            </div>
+          </div>
+          </div>
+
+          <div className="mt-4 pt-4 border-t border-gray-300 text-right">
+            <button
+              onClick={() => setSelectedOrder(null)}
+              className="btn btn-secondary"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderOrders = () => (
+    <div>
+      <h2 className="text-3xl font-bold text-primary mb-6">Order Management</h2>
+      {loading ? (
+        <p className="text-lg text-gray-600">Loading orders...</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="p-3 text-left border border-gray-300 font-bold text-primary">Order ID</th>
+                <th className="p-3 text-left border border-gray-300 font-bold text-primary">Customer</th>
+                <th className="p-3 text-left border border-gray-300 font-bold text-primary">Date</th>
+                <th className="p-3 text-left border border-gray-300 font-bold text-primary">Total</th>
+                <th className="p-3 text-left border border-gray-300 font-bold text-primary">Payment</th>
+                <th className="p-3 text-left border border-gray-300 font-bold text-primary">Status</th>
+                <th className="p-3 text-left border border-gray-300 font-bold text-primary">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {orders.map((order) => {
+                const displayOrderId = order.orderId || `#${order._id.slice(-8)}`;
+                return (
+                <tr key={order._id} className="hover:bg-gray-50">
+                  <td className="p-3 border border-gray-300">
+                    {displayOrderId}
+                    {order.notes && order.notes.trim() && (
+                      <span className="ml-2 text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded" title={order.notes}>
+                        📝 Has Notes
+                      </span>
+                    )}
+                    {order.feedback && order.feedback.rating && (
+                      <span className="ml-2 text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded" title={`Rating: ${order.feedback.rating}/5`}>
+                        ⭐ {order.feedback.rating}/5
+                      </span>
+                    )}
+                  </td>
+                  <td className="p-3 border border-gray-300">{order.userId?.name || 'N/A'}</td>
+                  <td className="p-3 border border-gray-300">
+                    {new Date(order.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className="p-3 border border-gray-300">₹{order.totalAmount}</td>
+                  <td className="p-3 border border-gray-300">
+                    {order.paymentMethod === 'cash_on_delivery' ? 'COD' : order.paymentMethod}
+                  </td>
+                  <td className="p-3 border border-gray-300">
+                    <span className={`px-3 py-1 rounded text-white text-xs font-semibold ${getStatusBadgeClass(order.status)}`}>
+                      {order.status.toUpperCase()}
+                    </span>
+                  </td>
+                  <td className="p-3 border border-gray-300">
+                    <button
+                      onClick={() => setSelectedOrder(order)}
+                      className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 transition-colors"
+                    >
+                      View Details
+                    </button>
+                  </td>
+                </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+
+  const renderInventory = () => (
+    <div>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-3xl font-bold text-primary">Inventory Management</h2>
+        <button
+          onClick={handleAddProduct}
+          className="px-6 py-3 bg-success text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
+        >
+          + Add New Product
+        </button>
+      </div>
+      {loading ? (
+        <p className="text-lg text-gray-600">Loading products...</p>
+      ) : (
+        <div className="bg-white rounded-lg shadow-md p-4">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr className="bg-gray-100">
+                <th className="p-3 text-left border border-gray-300 font-bold text-primary">Image</th>
+                <th className="p-3 text-left border border-gray-300 font-bold text-primary">Product</th>
+                <th className="p-3 text-left border border-gray-300 font-bold text-primary">Category</th>
+                <th className="p-3 text-right border border-gray-300 font-bold text-primary">Cost Price</th>
+                <th className="p-3 text-right border border-gray-300 font-bold text-primary">Selling Price</th>
+                <th className="p-3 text-right border border-gray-300 font-bold text-primary">Profit/Unit</th>
+                <th className="p-3 text-center border border-gray-300 font-bold text-primary">Stock</th>
+                <th className="p-3 text-center border border-gray-300 font-bold text-primary">Stock Status</th>
+                <th className="p-3 text-right border border-gray-300 font-bold text-primary">Total Profit</th>
+                <th className="p-3 text-left border border-gray-300 font-bold text-primary">Buying Date</th>
+                <th className="p-3 text-left border border-gray-300 font-bold text-primary">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+              {products.map((product) => {
+                const profit = calculateProfit(product);
+                const productImageSrc = !product.image || product.image.includes('via.placeholder.com')
+                  ? INVENTORY_PLACEHOLDER_IMAGE
+                  : product.image;
+                return (
+                  <tr key={product._id} className="hover:bg-gray-50">
+                    <td className="p-3 border border-gray-300">
+                      <img
+                        src={productImageSrc}
+                        alt={product.name}
+                        className="w-16 h-16 object-cover rounded"
+                        onError={(e) => {
+                          if (e.target.src !== INVENTORY_PLACEHOLDER_IMAGE) {
+                            e.target.src = INVENTORY_PLACEHOLDER_IMAGE;
+                          }
+                        }}
+                      />
+                    </td>
+                    <td className="p-3 border border-gray-300">
+                      <div className="font-semibold">{product.name}</div>
+                      <div className="text-sm text-gray-500 truncate max-w-xs">{product.description}</div>
+                    </td>
+                    <td className="p-3 border border-gray-300">{product.category}</td>
+                    <td className="p-3 border border-gray-300 text-right">
+                      {product.costPrice ? `₹${product.costPrice}` : '-'}
+                    </td>
+                    <td className="p-3 border border-gray-300 font-semibold text-right">₹{product.price}</td>
+                    <td className="p-3 border border-gray-300 text-right">
+                      {profit ? (
+                        <span className={`font-semibold ${parseFloat(profit.profitPerUnit) > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          ₹{profit.profitPerUnit}
+                        </span>
+                      ) : (
+                        '-'
+                      )}
+                    </td>
+                    <td className={`p-3 border border-gray-300 text-center ${getStockColor(product.stock)}`}>
+                      {product.stock}
+                    </td>
+                    <td className="p-3 border border-gray-300 text-center">
+                      {product.stock === 0 && (
+                        <span className="inline-block bg-red-100 text-red-800 px-3 py-1 rounded text-xs font-bold">
+                          OUT OF STOCK
+                        </span>
+                      )}
+                      {product.stock > 0 && product.stock < 10 && (
+                        <span className="inline-block bg-yellow-100 text-yellow-800 px-3 py-1 rounded text-xs font-bold">
+                          LOW STOCK
+                        </span>
+                      )}
+                      {product.stock >= 10 && (
+                        <span className="inline-block bg-green-100 text-green-800 px-3 py-1 rounded text-xs font-bold">
+                          HEALTHY
+                        </span>
+                      )}
+                    </td>
+                    <td className="p-3 border border-gray-300 text-right">
+                      {profit ? (
+                        <div>
+                          <span className={`font-bold ${parseFloat(profit.totalProfit) > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            ₹{profit.totalProfit}
+                          </span>
+                          <div className="text-xs text-gray-500">({profit.profitMargin}%)</div>
+                        </div>
+                      ) : (
+                        '-'
+                      )}
+                    </td>
+                    <td className="p-3 border border-gray-300 text-sm">
+                      {product.buyingDate ? new Date(product.buyingDate).toLocaleDateString() : '-'}
+                    </td>
+                    <td className="p-3 border border-gray-300">
+                      <div className="flex gap-2 flex-wrap">
+                        <button
+                          onClick={() => handleEditProduct(product)}
+                          className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 transition-colors"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleUpdateInventory(product._id, product.stock)}
+                          className="px-3 py-1 bg-success text-white rounded text-sm hover:bg-green-700 transition-colors"
+                        >
+                          Stock
+                        </button>
+                        <button
+                          onClick={() => handleDeleteProduct(product._id, product.name)}
+                          className="px-3 py-1 bg-danger text-white rounded text-sm hover:bg-red-700 transition-colors"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  const renderDailyDeals = () => (
+    <div>
+      <div className="mb-6 admin-deals-header">
+        <h2 className="text-3xl font-bold text-primary mb-4">⚡ Daily Deals Management</h2>
+        <p className="text-gray-600 mb-4">
+          Mark <span className="font-semibold">3–5 products</span> as today's deals using a simple
+          boolean flag in the database. Each deal gives customers
+          <span className="font-semibold"> 50% OFF</span> on the first
+          <span className="font-semibold"> 10 items</span> sold today and encourages them to
+          visit your store every day.
+        </p>
+
+        {dealMessage && (
+          <div className={`mb-4 p-4 rounded-lg font-semibold ${dealMessage.type === 'success'
+            ? 'bg-green-100 text-green-800'
+            : 'bg-red-100 text-red-800'
+            }`}>
+            {dealMessage.text}
+          </div>
+        )}
+
+        {loading ? (
+          <p className="text-lg text-gray-600">Loading daily deals...</p>
+        ) : dailyDeals.length > 0 ? (
+          <div className="mb-8">
+            <h3 className="text-xl font-bold text-red-600 mb-4">Current Daily Deals ({dailyDeals.length}/5)</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 admin-deals-grid">
+              {dailyDeals.map((product) => (
+                <div key={product._id} className="admin-deal-card">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <h4 className="font-bold text-primary text-lg">{product.name}</h4>
+                      <p className="text-sm text-gray-600">{product.category}</p>
+                    </div>
+                    <span className="text-2xl">🔥</span>
+                  </div>
+                  <div className="flex justify-between items-center mb-3">
+                    <div>
+                      <p className="text-2xl font-bold text-red-600">₹{product.price}</p>
+                      {product.originalPrice && (
+                        <p className="text-sm line-through text-gray-600">₹{product.originalPrice}</p>
+                      )}
+                      {typeof product.dailyDealRemaining === 'number' && (
+                        <p className="text-xs font-semibold text-red-700 mt-1">
+                          Offer left today: {product.dailyDealRemaining} / 10
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-green-700">Stock: {product.stock}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleToggleDailyDeal(product._id)}
+                    className="admin-deal-remove-btn"
+                  >
+                    Remove from Daily Deals
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </div>
+
+      <div>
+        <h3 className="text-xl font-bold text-primary mb-4">Add Products to Daily Deals</h3>
+        {loading ? (
+          <p className="text-lg text-gray-600">Loading products...</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="p-3 text-left border border-gray-300 font-bold text-primary">Product</th>
+                  <th className="p-3 text-left border border-gray-300 font-bold text-primary">Category</th>
+                  <th className="p-3 text-left border border-gray-300 font-bold text-primary">Price</th>
+                  <th className="p-3 text-left border border-gray-300 font-bold text-primary">Stock</th>
+                  <th className="p-3 text-left border border-gray-300 font-bold text-primary">Status</th>
+                  <th className="p-3 text-left border border-gray-300 font-bold text-primary">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {products.map((product) => (
+                  <tr
+                    key={product._id}
+                    className={`hover:bg-gray-50 ${product.isDailyDeal ? 'bg-orange-50' : ''}`}
+                  >
+                    <td className="p-3 border border-gray-300 font-semibold">{product.name}</td>
+                    <td className="p-3 border border-gray-300">{product.category}</td>
+                    <td className="p-3 border border-gray-300">₹{product.price}</td>
+                    <td className="p-3 border border-gray-300">{product.stock}</td>
+                    <td className="p-3 border border-gray-300">
+                      {product.isDailyDeal ? (
+                        <span className="inline-block bg-red-100 text-red-800 px-3 py-1 rounded text-xs font-bold">
+                          🔥 DEAL
+                        </span>
+                      ) : (
+                        <span className="text-gray-500 text-sm">-</span>
+                      )}
+                    </td>
+                    <td className="p-3 border border-gray-300">
+                      {(() => {
+                        const isDisabled = dailyDeals.length >= 5 && !product.isDailyDeal;
+                        const variantClass = isDisabled
+                          ? 'deal-action-btn-disabled'
+                          : product.isDailyDeal
+                            ? 'deal-action-btn-remove'
+                            : 'deal-action-btn-add';
+                        return (
+                          <button
+                            onClick={() => handleToggleDailyDeal(product._id)}
+                            disabled={isDisabled}
+                            className={`deal-action-btn ${variantClass}`}
+                          >
+                            {product.isDailyDeal ? 'Remove' : 'Add'}
+                          </button>
+                        );
+                      })()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+  const renderEcoFriendly = () => (
+    <div>
+      <div className="mb-6">
+        <h2 className="text-3xl font-bold text-primary mb-4">🌿 Product Attributes Management</h2>
+        <p className="text-gray-600 mb-4">
+          Mark products as Organic, Local, or Fresh Today to build trust and transparency with customers.
+        </p>
+
+        {ecoMessage && (
+          <div className={`mb-4 p-4 rounded-lg font-semibold ${ecoMessage.type === 'success'
+            ? 'bg-green-100 text-green-800'
+            : 'bg-red-100 text-red-800'
+            }`}>
+            {ecoMessage.text}
+          </div>
+        )}
+
+        {loading ? (
+          <p className="text-lg text-gray-600">Loading products...</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="p-3 text-left border border-gray-300 font-bold text-primary">Product</th>
+                  <th className="p-3 text-left border border-gray-300 font-bold text-primary">Category</th>
+                  <th className="p-3 text-left border border-gray-300 font-bold text-primary">Price</th>
+                  <th className="p-3 text-left border border-gray-300 font-bold text-primary">Stock</th>
+                  <th className="p-3 text-left border border-gray-300 font-bold text-primary">Organic</th>
+                  <th className="p-3 text-left border border-gray-300 font-bold text-primary">Local</th>
+                  <th className="p-3 text-left border border-gray-300 font-bold text-primary">Fresh Today</th>
+                  <th className="p-3 text-left border border-gray-300 font-bold text-primary">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {products.map((product) => (
+                  <tr key={product._id} className="hover:bg-gray-50">
+                    <td className="p-3 border border-gray-300 font-semibold">{product.name}</td>
+                    <td className="p-3 border border-gray-300">{product.category}</td>
+                    <td className="p-3 border border-gray-300">₹{product.price}</td>
+                    <td className="p-3 border border-gray-300">
+                      {product.stock <= 10 && product.stock > 0 ? (
+                        <span className="text-orange-600 font-bold">⚠️ {product.stock}</span>
+                      ) : (
+                        <span>{product.stock}</span>
+                      )}
+                    </td>
+                    <td className="p-3 border border-gray-300">
+                      {product.isOrganic ? (
+                        <span className="inline-block bg-green-100 text-green-800 px-3 py-1 rounded text-xs font-bold">
+                          🌿 Organic
+                        </span>
+                      ) : (
+                        <span className="text-gray-500 text-sm">-</span>
+                      )}
+                    </td>
+                    <td className="p-3 border border-gray-300">
+                      {product.isLocal ? (
+                        <span className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded text-xs font-bold">
+                          📍 Local
+                        </span>
+                      ) : (
+                        <span className="text-gray-500 text-sm">-</span>
+                      )}
+                    </td>
+                    <td className="p-3 border border-gray-300">
+                      {product.isFreshToday ? (
+                        <span className="inline-block bg-green-100 text-green-800 px-3 py-1 rounded text-xs font-bold animate-pulse">
+                          ✨ Fresh
+                        </span>
+                      ) : (
+                        <span className="text-gray-500 text-sm">-</span>
+                      )}
+                    </td>
+                    <td className="p-3 border border-gray-300">
+                      <div className="flex gap-2 flex-wrap">
+                        <button
+                          onClick={() => handleToggleOrganic(product._id)}
+                          className={`px-3 py-1 rounded text-sm font-semibold transition-colors ${product.isOrganic
+                            ? 'bg-green-600 text-white hover:bg-green-700'
+                            : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+                            }`}
+                        >
+                          {product.isOrganic ? 'Remove Organic' : 'Add Organic'}
+                        </button>
+                        <button
+                          onClick={() => handleToggleLocal(product._id)}
+                          className={`px-3 py-1 rounded text-sm font-semibold transition-colors ${product.isLocal
+                            ? 'bg-blue-600 text-white hover:bg-blue-700'
+                            : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+                            }`}
+                        >
+                          {product.isLocal ? 'Remove Local' : 'Add Local'}
+                        </button>
+                        <button
+                          onClick={() => handleToggleFresh(product._id)}
+                          className={`px-3 py-1 rounded text-sm font-semibold transition-colors ${product.isFreshToday
+                            ? 'bg-green-600 text-white hover:bg-green-700'
+                            : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+                            }`}
+                        >
+                          {product.isFreshToday ? 'Remove Fresh' : 'Mark Fresh'}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+  return (
+    <div className="p-6 max-w-7xl mx-auto">
+      <h1 className="text-4xl font-bold text-primary mb-8">Admin Dashboard</h1>
+
+      <div className="flex gap-0 mb-6 border-b-2 border-gray-300">
+        <button
+          onClick={() => setActiveTab('orders')}
+          className={`px-6 py-3 font-semibold text-lg transition-colors border-b-4 ${activeTab === 'orders'
+            ? 'bg-blue-500 text-white border-blue-700'
+            : 'bg-transparent text-gray-700 border-transparent hover:bg-gray-100'
+            }`}
+        >
+          Orders
+        </button>
+        <button
+          onClick={() => setActiveTab('inventory')}
+          className={`px-6 py-3 font-semibold text-lg transition-colors border-b-4 ${activeTab === 'inventory'
+            ? 'bg-blue-500 text-white border-blue-700'
+            : 'bg-transparent text-gray-700 border-transparent hover:bg-gray-100'
+            }`}
+        >
+          Inventory
+        </button>
+        <button
+          onClick={() => setActiveTab('deals')}
+          className={`px-6 py-3 font-semibold text-lg transition-colors border-b-4 ${activeTab === 'deals'
+            ? 'bg-red-600 text-white border-red-800'
+            : 'bg-transparent text-gray-700 border-transparent hover:bg-gray-100'
+            }`}
+        >
+          ⚡ Daily Deals
+        </button>
+        <button
+          onClick={() => setActiveTab('eco')}
+          className={`px-6 py-3 font-semibold text-lg transition-colors border-b-4 ${activeTab === 'eco'
+            ? 'bg-green-600 text-white border-green-800'
+            : 'bg-transparent text-gray-700 border-transparent hover:bg-gray-100'
+            }`}
+        >
+          🌿 Eco-Friendly
+        </button>
+        <button
+          onClick={() => setActiveTab('shopping-lists')}
+          className={`px-6 py-3 font-semibold text-lg transition-colors border-b-4 ${activeTab === 'shopping-lists'
+            ? 'bg-purple-600 text-white border-purple-800'
+            : 'bg-transparent text-gray-700 border-transparent hover:bg-gray-100'
+            }`}
+        >
+          🛍️ Shopping Lists
+        </button>
+      </div>
+
+      {activeTab === 'orders' && renderOrders()}
+      {activeTab === 'inventory' && renderInventory()}
+      {activeTab === 'deals' && renderDailyDeals()}
+      {activeTab === 'eco' && renderEcoFriendly()}
+      {activeTab === 'shopping-lists' && <AdminShoppingLists />}
+
+      {renderOrderDetails()}
+
+      {/* Product Modal */}
+      {showProductModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-6 p-6">
+          <div
+            className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] p-10 shadow-lg"
+            style={{
+              marginTop: '3rem',
+              marginBottom: '3rem',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            <h2 className="text-2xl font-bold text-primary mb-6">
+              {editingProduct ? 'Edit Product' : 'Add New Product'}
+            </h2>
+
+            <form
+              onSubmit={handleProductSubmit}
+              className="space-y-5"
+              style={{ flex: 1, overflowY: 'auto' }}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Product Name *
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={productForm.name}
+                    onChange={handleProductFormChange}
+                    required
+                    className="input-field"
+                    placeholder="Enter product name"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Category *
+                  </label>
+                  <select
+                    name="category"
+                    value={productForm.category}
+                    onChange={handleProductFormChange}
+                    required
+                    className="input-field"
+                  >
+                    <option value="Rice & Grains">Rice & Grains</option>
+                    <option value="Flours">Flours</option>
+                    <option value="Pulses & Dals">Pulses & Dals</option>
+                    <option value="Spices & Masalas">Spices & Masalas</option>
+                    <option value="Cooking Essentials">Cooking Essentials</option>
+                    <option value="Dairy Products">Dairy Products</option>
+                    <option value="Eggs & Bakery">Eggs & Bakery</option>
+                    <option value="Fruits (Daily Use)">Fruits (Daily Use)</option>
+                    <option value="Vegetables (Daily Use)">Vegetables (Daily Use)</option>
+                    <option value="Snacks & Biscuits">Snacks & Biscuits</option>
+                    <option value="Instant & Packed Foods">Instant & Packed Foods</option>
+                    <option value="Beverages">Beverages</option>
+                    <option value="Personal Care">Personal Care</option>
+                    <option value="Cleaning & Household">Cleaning & Household</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Price (₹) *
+                  </label>
+                  <input
+                    type="number"
+                    name="price"
+                    value={productForm.price}
+                    onChange={handleProductFormChange}
+                    required
+                    min="0"
+                    step="0.01"
+                    className="input-field"
+                    placeholder="0.00"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Cost Price (₹)
+                  </label>
+                  <input
+                    type="number"
+                    name="costPrice"
+                    value={productForm.costPrice}
+                    onChange={handleProductFormChange}
+                    min="0"
+                    step="0.01"
+                    className="input-field"
+                    placeholder="0.00"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Buying Date
+                  </label>
+                  <input
+                    type="date"
+                    name="buyingDate"
+                    value={productForm.buyingDate}
+                    onChange={handleProductFormChange}
+                    className="input-field"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Stock Quantity *
+                  </label>
+                  <input
+                    type="number"
+                    name="stock"
+                    value={productForm.stock}
+                    onChange={handleProductFormChange}
+                    required
+                    min="0"
+                    className="input-field"
+                    placeholder="0"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Cost Price (₹)
+                  </label>
+                  <input
+                    type="number"
+                    name="costPrice"
+                    value={productForm.costPrice}
+                    onChange={handleProductFormChange}
+                    min="0"
+                    step="0.01"
+                    className="input-field"
+                    placeholder="0.00"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Rating (0-5)
+                  </label>
+                  <input
+                    type="number"
+                    name="rating"
+                    value={productForm.rating}
+                    onChange={handleProductFormChange}
+                    min="0"
+                    max="5"
+                    step="0.1"
+                    className="input-field"
+                    placeholder="4.5"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Description *
+                </label>
+                <textarea
+                  name="description"
+                  value={productForm.description}
+                  onChange={handleProductFormChange}
+                  required
+                  rows="3"
+                  className="input-field resize-none"
+                  placeholder="Enter detailed product description"
+                ></textarea>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Image URL
+                </label>
+                <input
+                  type="url"
+                  name="image"
+                  value={productForm.image}
+                  onChange={handleProductFormChange}
+                  className="input-field"
+                  placeholder="https://example.com/image.jpg"
+                />
+                {productForm.image && (
+                  <div className="mt-2">
+                    {/** Avoid remote placeholder URLs even if typed */}
+                    {(() => {
+                      const previewSrc = !productForm.image || productForm.image.includes('via.placeholder.com')
+                        ? INVENTORY_PLACEHOLDER_IMAGE
+                        : productForm.image;
+                      return (
+                    <img
+                      src={previewSrc}
+                      alt="Preview"
+                      className="w-32 h-32 object-cover rounded border"
+                      onError={(e) => {
+                        if (e.target.src !== INVENTORY_PLACEHOLDER_IMAGE) {
+                          e.target.src = INVENTORY_PLACEHOLDER_IMAGE;
+                        }
+                      }}
+                    />
+                      );
+                    })()}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-3 mt-6 justify-end">
+                <button
+                  type="submit"
+                  className="px-6 py-2 bg-success text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
+                >
+                  {editingProduct ? 'Update Product' : 'Create Product'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowProductModal(false)}
+                  className="px-6 py-2 bg-danger text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default AdminDashboard;
