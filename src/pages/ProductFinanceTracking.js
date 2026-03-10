@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import financeService from '../services/financeService';
 import ProfitTrendChart from '../components/ProfitTrendChart';
 import TopPerformersChart from '../components/TopPerformersChart';
@@ -147,15 +147,7 @@ const ProductFinanceTracking = () => {
 
   const [products, setProducts] = useState([]);
 
-  // We intentionally only want this effect to run once on mount
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    fetchFinances();
-    fetchSummary();
-    fetchProducts();
-  }, []);
-
-  const fetchFinances = async () => {
+  const fetchFinances = useCallback(async () => {
     try {
       setLoading(true);
       const data = await financeService.getProductFinances(filterStatus, sortBy);
@@ -165,18 +157,18 @@ const ProductFinanceTracking = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filterStatus, sortBy]);
 
-  const fetchSummary = async () => {
+  const fetchSummary = useCallback(async () => {
     try {
       const data = await financeService.getFinancialSummary();
       setSummary(data);
     } catch (error) {
       console.error('Error fetching summary:', error);
     }
-  };
+  }, []);
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       const response = await fetch('http://localhost:5000/api/products', {
         headers: {
@@ -188,7 +180,13 @@ const ProductFinanceTracking = () => {
     } catch (error) {
       console.error('Error fetching products:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchFinances();
+    fetchSummary();
+    fetchProducts();
+  }, [fetchFinances, fetchSummary, fetchProducts]);
 
   const handleAddFinance = () => {
     setEditingFinance(null);

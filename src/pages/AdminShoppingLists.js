@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { adminShoppingListService, productService } from '../services/api';
 
 const AdminShoppingLists = () => {
@@ -19,14 +19,7 @@ const AdminShoppingLists = () => {
   });
   const [selectedProducts, setSelectedProducts] = useState([]);
 
-  // We intentionally only want this effect to run once on mount
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    fetchLists();
-    fetchAllProducts();
-  }, []);
-
-  const fetchLists = async () => {
+  const fetchLists = useCallback(async () => {
     setLoading(true);
     try {
       const response = await adminShoppingListService.getAllLists();
@@ -43,16 +36,21 @@ const AdminShoppingLists = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchAllProducts = async () => {
+  const fetchAllProducts = useCallback(async () => {
     try {
       const response = await productService.getProducts();
       setAllProducts(response.data);
     } catch (error) {
       console.error('Error fetching products:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchLists();
+    fetchAllProducts();
+  }, [fetchLists, fetchAllProducts]);
 
   const showMessage = (type, text) => {
     setMessage({ type, text });
