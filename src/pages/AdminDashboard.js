@@ -46,15 +46,15 @@ const AdminDashboard = () => {
     // Shopping lists tab has its own component that handles fetching
   }, [activeTab]);
 
-  // Lock background scroll when the product modal is open
+  // Lock background scroll when any modal is open
   useEffect(() => {
-    if (showProductModal) {
+    if (showProductModal || selectedOrder) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
     }
     return () => { document.body.style.overflow = ''; };
-  }, [showProductModal]);
+  }, [showProductModal, selectedOrder]);
 
   // Auto-refresh inventory data periodically when on the Inventory tab
   useEffect(() => {
@@ -323,151 +323,239 @@ const AdminDashboard = () => {
     if (!selectedOrder) return null;
 
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center"
+        style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', padding: '1.5rem', overscrollBehavior: 'contain' }}
+      >
         <div
-          className="bg-white rounded-lg max-w-2xl w-full p-8 flex flex-column"
-          style={{ maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}
+          className="bg-white w-full shadow-2xl"
+          style={{
+            maxWidth: '42rem',
+            maxHeight: '85vh',
+            borderRadius: '0.75rem',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+          }}
         >
-          <h2 className="text-2xl font-bold text-primary mb-6">Order Details - #{selectedOrder._id.slice(-8)}</h2>
-
-          <div className="overflow-auto" style={{ flex: 1 }}>
-          <div className="mb-6">
-            <h3 className="text-lg font-bold text-primary mb-3">Customer Information</h3>
-            <div className="space-y-2">
-              <p><strong>Name:</strong> {selectedOrder.userId?.name || 'N/A'}</p>
-              <p><strong>Email:</strong> {selectedOrder.userId?.email || 'N/A'}</p>
-              <p><strong>Phone:</strong> {selectedOrder.userId?.phone || 'N/A'}</p>
+          {/* Header */}
+          <div
+            style={{
+              background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+              padding: '1rem 1.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexShrink: 0,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <span style={{ fontSize: '1.25rem' }}>📋</span>
+              <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>
+                Order Details - #{selectedOrder._id.slice(-8)}
+              </h2>
             </div>
+            <button
+              type="button"
+              onClick={() => setSelectedOrder(null)}
+              style={{
+                background: 'rgba(255,255,255,0.2)',
+                border: 'none',
+                borderRadius: '50%',
+                width: '2rem',
+                height: '2rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: '#fff',
+                fontSize: '1.1rem',
+                fontWeight: 700,
+                transition: 'background 0.2s',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.35)')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.2)')}
+              title="Close"
+            >
+              ✕
+            </button>
           </div>
 
-          <div className="mb-6">
-            <h3 className="text-lg font-bold text-primary mb-3">Order Information</h3>
-            <div className="space-y-2">
-              <p><strong>Order Date:</strong> {new Date(selectedOrder.createdAt).toLocaleString()}</p>
-              <p><strong>Payment Method:</strong> {selectedOrder.paymentMethod.replace('_', ' ').toUpperCase()}</p>
-              <p>
-                <strong>Status:</strong>{' '}
-                <span className={`inline-block ml-2 px-3 py-1 rounded text-white text-sm ${getStatusBadgeClass(selectedOrder.status)}`}>
-                  {selectedOrder.status.toUpperCase()}
-                </span>
-              </p>
-              <p><strong>Payment Status:</strong> {selectedOrder.paymentStatus}</p>
-              {selectedOrder.trackingNumber && (
-                <p><strong>Tracking:</strong> {selectedOrder.trackingNumber}</p>
-              )}
-            </div>
-          </div>
+          {/* Scrollable body */}
+          <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem 1.5rem' }}>
 
-          {selectedOrder.notes && selectedOrder.notes.trim() && (
-            <div className="mb-6 p-4 bg-yellow-50 border-2 border-yellow-400 rounded-lg">
-              <h3 className="text-lg font-bold text-orange-700 mb-2 flex items-center">
-                📝 Special Instructions from Customer
+            {/* Customer Information */}
+            <div style={{ marginBottom: '1.1rem' }}>
+              <h3 style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b', marginBottom: '0.5rem' }}>
+                Customer Information
               </h3>
-              <p className="text-gray-800 font-medium italic">"{selectedOrder.notes}"</p>
+              <div style={{ background: '#f8fafc', borderRadius: '0.5rem', padding: '0.75rem 1rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem 1.5rem', fontSize: '0.85rem' }}>
+                <p style={{ margin: 0 }}><strong style={{ color: '#475569' }}>Name:</strong> {selectedOrder.userId?.name || 'N/A'}</p>
+                <p style={{ margin: 0 }}><strong style={{ color: '#475569' }}>Phone:</strong> {selectedOrder.userId?.phone || 'N/A'}</p>
+                <p style={{ margin: 0, gridColumn: 'span 2' }}><strong style={{ color: '#475569' }}>Email:</strong> {selectedOrder.userId?.email || 'N/A'}</p>
+              </div>
             </div>
-          )}
 
-          {selectedOrder.adminNotes && selectedOrder.adminNotes.trim() && (
-            <div className="mb-6 p-4 bg-gray-50 border-2 border-gray-300 rounded-lg">
-              <h3 className="text-lg font-bold text-gray-800 mb-2 flex items-center">
-                🧾 Admin Notes / Status History
+            <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '0 0 1.1rem' }} />
+
+            {/* Order Information */}
+            <div style={{ marginBottom: '1.1rem' }}>
+              <h3 style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b', marginBottom: '0.5rem' }}>
+                Order Information
               </h3>
-              <p className="text-gray-700 font-medium">{selectedOrder.adminNotes}</p>
+              <div style={{ background: '#f8fafc', borderRadius: '0.5rem', padding: '0.75rem 1rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem 1.5rem', fontSize: '0.85rem' }}>
+                <p style={{ margin: 0 }}><strong style={{ color: '#475569' }}>Order Date:</strong> {new Date(selectedOrder.createdAt).toLocaleString()}</p>
+                <p style={{ margin: 0 }}><strong style={{ color: '#475569' }}>Payment:</strong> {selectedOrder.paymentMethod.replace('_', ' ').toUpperCase()}</p>
+                <p style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <strong style={{ color: '#475569' }}>Status:</strong>
+                  <span className={`inline-block px-2 py-0.5 rounded text-white text-xs font-semibold ${getStatusBadgeClass(selectedOrder.status)}`}>
+                    {selectedOrder.status.toUpperCase()}
+                  </span>
+                </p>
+                <p style={{ margin: 0 }}><strong style={{ color: '#475569' }}>Payment Status:</strong> {selectedOrder.paymentStatus}</p>
+                {selectedOrder.trackingNumber && (
+                  <p style={{ margin: 0, gridColumn: 'span 2' }}><strong style={{ color: '#475569' }}>Tracking:</strong> {selectedOrder.trackingNumber}</p>
+                )}
+              </div>
             </div>
-          )}
 
-          {selectedOrder.feedback && selectedOrder.feedback.rating && (
-            <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-400 rounded-lg">
-              <h3 className="text-lg font-bold text-blue-700 mb-3 flex items-center">
-                ⭐ Customer Feedback
-              </h3>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-gray-700">Rating:</span>
-                  <div className="flex gap-1">
+            {/* Special Instructions */}
+            {selectedOrder.notes && selectedOrder.notes.trim() && (
+              <div style={{ marginBottom: '1.1rem', padding: '0.75rem 1rem', background: '#fefce8', border: '1px solid #fbbf24', borderRadius: '0.5rem' }}>
+                <h3 style={{ fontSize: '0.8rem', fontWeight: 700, color: '#92400e', marginBottom: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  📝 Special Instructions
+                </h3>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: '#374151', fontStyle: 'italic' }}>"{selectedOrder.notes}"</p>
+              </div>
+            )}
+
+            {/* Admin Notes */}
+            {selectedOrder.adminNotes && selectedOrder.adminNotes.trim() && (
+              <div style={{ marginBottom: '1.1rem', padding: '0.75rem 1rem', background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '0.5rem' }}>
+                <h3 style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  🧾 Admin Notes
+                </h3>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569' }}>{selectedOrder.adminNotes}</p>
+              </div>
+            )}
+
+            {/* Customer Feedback */}
+            {selectedOrder.feedback && selectedOrder.feedback.rating && (
+              <div style={{ marginBottom: '1.1rem', padding: '0.75rem 1rem', background: '#eff6ff', border: '1px solid #93c5fd', borderRadius: '0.5rem' }}>
+                <h3 style={{ fontSize: '0.8rem', fontWeight: 700, color: '#1e40af', marginBottom: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  ⭐ Customer Feedback
+                </h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
+                  <div style={{ display: 'flex', gap: '2px' }}>
                     {[1, 2, 3, 4, 5].map((star) => (
-                      <span key={star} className={`text-xl ${star <= selectedOrder.feedback.rating ? 'text-yellow-500' : 'text-gray-300'}`}>
-                        ★
-                      </span>
+                      <span key={star} style={{ fontSize: '1rem', color: star <= selectedOrder.feedback.rating ? '#eab308' : '#d1d5db' }}>★</span>
                     ))}
                   </div>
-                  <span className="text-lg font-bold text-blue-700">
-                    {selectedOrder.feedback.rating}/5
-                  </span>
+                  <span style={{ fontWeight: 700, color: '#1e40af' }}>{selectedOrder.feedback.rating}/5</span>
                 </div>
                 {selectedOrder.feedback.comment && selectedOrder.feedback.comment.trim() && (
-                  <div>
-                    <span className="text-sm font-semibold text-gray-700">Comment:</span>
-                    <p className="text-gray-800 italic mt-1">"{selectedOrder.feedback.comment}"</p>
-                  </div>
+                  <p style={{ margin: '0.3rem 0 0', fontSize: '0.85rem', color: '#374151', fontStyle: 'italic' }}>"{selectedOrder.feedback.comment}"</p>
                 )}
-                <p className="text-xs text-gray-500">
+                <p style={{ margin: '0.3rem 0 0', fontSize: '0.7rem', color: '#94a3b8' }}>
                   Submitted on {new Date(selectedOrder.feedback.submittedAt).toLocaleString()}
                 </p>
               </div>
+            )}
+
+            <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '0 0 1.1rem' }} />
+
+            {/* Shipping Address */}
+            <div style={{ marginBottom: '1.1rem' }}>
+              <h3 style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b', marginBottom: '0.5rem' }}>
+                Shipping Address
+              </h3>
+              <div style={{ background: '#f8fafc', borderRadius: '0.5rem', padding: '0.75rem 1rem', fontSize: '0.85rem', color: '#475569', lineHeight: 1.6 }}>
+                <p style={{ margin: 0 }}>{selectedOrder.shippingAddress.street}</p>
+                <p style={{ margin: 0 }}>{selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.state}</p>
+                <p style={{ margin: 0 }}>{selectedOrder.shippingAddress.zipCode}, {selectedOrder.shippingAddress.country}</p>
+              </div>
             </div>
-          )}
 
-          <div className="mb-6">
-            <h3 className="text-lg font-bold text-primary mb-3">Shipping Address</h3>
-            <div className="text-gray-700">
-              <p>{selectedOrder.shippingAddress.street}</p>
-              <p>{selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.state}</p>
-              <p>{selectedOrder.shippingAddress.zipCode}, {selectedOrder.shippingAddress.country}</p>
+            <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '0 0 1.1rem' }} />
+
+            {/* Items */}
+            <div style={{ marginBottom: '1.1rem' }}>
+              <h3 style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b', marginBottom: '0.5rem' }}>
+                Items Ordered
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                {selectedOrder.items.map((item, index) => (
+                  <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0.75rem', background: '#f8fafc', borderRadius: '0.4rem', fontSize: '0.85rem' }}>
+                    <span style={{ fontWeight: 600, color: '#1e293b' }}>{item.name}</span>
+                    <span style={{ color: '#64748b', whiteSpace: 'nowrap' }}>{item.quantity} × ₹{item.price} = <strong style={{ color: '#0f172a' }}>₹{item.quantity * item.price}</strong></span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
 
-          <div className="mb-6">
-            <h3 className="text-lg font-bold text-primary mb-3">Items</h3>
-            <div className="space-y-2">
-              {selectedOrder.items.map((item, index) => (
-                <div key={index} className="p-3 bg-gray-50 rounded-lg">
-                  <p className="font-bold text-primary">{item.name}</p>
-                  <p className="text-sm text-gray-600">Quantity: {item.quantity} × ₹{item.price} = ₹{item.quantity * item.price}</p>
-                </div>
-              ))}
+            {/* Total */}
+            <div style={{ padding: '0.75rem 1rem', background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '0.5rem', marginBottom: '1.1rem' }}>
+              <p style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#166534' }}>Total Amount: ₹{selectedOrder.totalAmount}</p>
             </div>
-          </div>
 
-          <div className="p-4 bg-green-50 border border-green-300 rounded-lg mb-6">
-            <h3 className="font-bold text-lg text-success">Total Amount: ₹{selectedOrder.totalAmount}</h3>
-          </div>
-
-          <div className="mb-6">
-            <h3 className="text-lg font-bold text-primary mb-3">Update Order Status</h3>
-            <div className="flex flex-wrap gap-3">
-              {selectedOrder.status === 'pending' && (
-                <button
-                  onClick={() => handleUpdateOrderStatus(selectedOrder._id, 'processing', 'pending', false)}
-                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                >
-                  Approve & Process
-                </button>
-              )}
-              {selectedOrder.status === 'processing' && (
-                <button
-                  onClick={() => handleUpdateOrderStatus(selectedOrder._id, 'delivered', selectedOrder.paymentMethod === 'cash_on_delivery' ? 'completed' : 'pending', false)}
-                  className="px-4 py-2 bg-success text-white rounded hover:bg-green-700 transition-colors"
-                >
-                  Mark as Delivered
-                </button>
-              )}
-              {selectedOrder.status !== 'cancelled' && selectedOrder.status !== 'delivered' && (
-                <button
-                  onClick={() => handleUpdateOrderStatus(selectedOrder._id, 'cancelled', 'failed')}
-                  className="px-4 py-2 bg-danger text-white rounded hover:bg-red-700 transition-colors"
-                >
-                  Cancel Order
-                </button>
-              )}
+            {/* Update Status */}
+            <div style={{ marginBottom: '0.5rem' }}>
+              <h3 style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b', marginBottom: '0.5rem' }}>
+                Update Order Status
+              </h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                {selectedOrder.status === 'pending' && (
+                  <button
+                    onClick={() => handleUpdateOrderStatus(selectedOrder._id, 'processing', 'pending', false)}
+                    style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', fontWeight: 600, border: 'none', borderRadius: '0.4rem', background: '#3b82f6', color: '#fff', cursor: 'pointer', transition: 'background 0.2s' }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = '#2563eb')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = '#3b82f6')}
+                  >
+                    Approve & Process
+                  </button>
+                )}
+                {selectedOrder.status === 'processing' && (
+                  <button
+                    onClick={() => handleUpdateOrderStatus(selectedOrder._id, 'delivered', selectedOrder.paymentMethod === 'cash_on_delivery' ? 'completed' : 'pending', false)}
+                    style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', fontWeight: 600, border: 'none', borderRadius: '0.4rem', background: '#22c55e', color: '#fff', cursor: 'pointer', transition: 'background 0.2s' }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = '#16a34a')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = '#22c55e')}
+                  >
+                    Mark as Delivered
+                  </button>
+                )}
+                {selectedOrder.status !== 'cancelled' && selectedOrder.status !== 'delivered' && (
+                  <button
+                    onClick={() => handleUpdateOrderStatus(selectedOrder._id, 'cancelled', 'failed')}
+                    style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', fontWeight: 600, border: 'none', borderRadius: '0.4rem', background: '#ef4444', color: '#fff', cursor: 'pointer', transition: 'background 0.2s' }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = '#dc2626')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = '#ef4444')}
+                  >
+                    Cancel Order
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
+
           </div>
 
-          <div className="mt-4 pt-4 border-t border-gray-300 text-right">
+          {/* Footer */}
+          <div style={{ padding: '0.75rem 1.5rem', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}>
             <button
               onClick={() => setSelectedOrder(null)}
-              className="btn btn-secondary"
+              style={{
+                padding: '0.45rem 1.5rem',
+                border: '1px solid #cbd5e1',
+                borderRadius: '0.4rem',
+                background: '#fff',
+                color: '#475569',
+                fontWeight: 600,
+                fontSize: '0.85rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.borderColor = '#94a3b8'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
             >
               Close
             </button>
