@@ -259,13 +259,38 @@ const ShoppingLists = () => {
               <div
                 key={product._id}
                 onClick={() => !isOutOfStock && handleToggleProduct(product._id)}
-                className={`border-2 rounded-lg overflow-hidden hover:shadow-lg transition-all cursor-pointer ${
+                className={`relative border-2 rounded-lg overflow-visible hover:shadow-lg transition-all cursor-pointer ${
                   isSelected ? 'border-green-500 bg-green-50 ring-2 ring-green-300' : 'border-gray-200 bg-white'
                 } ${isOutOfStock ? 'opacity-60 cursor-not-allowed' : ''}`}
                 style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
               >
+                {/* Selection Checkbox - positioned outside image overflow */}
+                {!isOutOfStock && (
+                  <div
+                    className="absolute top-3 left-3"
+                    style={{ zIndex: 20 }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div
+                      onClick={() => handleToggleProduct(product._id)}
+                      className="flex items-center justify-center w-8 h-8 rounded-md cursor-pointer transition-all duration-200"
+                      style={{
+                        backgroundColor: isSelected ? '#16a34a' : '#ffffff',
+                        border: isSelected ? '2px solid #16a34a' : '2px solid #9ca3af',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                      }}
+                    >
+                      {isSelected && (
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Product Image */}
-                <div className="relative bg-gray-100"
+                <div className="relative bg-gray-100 rounded-t-lg"
                      style={{
                        width: '100%',
                        height: '192px',
@@ -278,30 +303,6 @@ const ShoppingLists = () => {
                     className="w-full h-full object-cover"
                     onError={(e) => (e.target.src = getFallbackImageUrl(product.name))}
                   />
-                  
-                  {/* Selection Checkbox */}
-                  {!isOutOfStock && (
-                    <div
-                      className="absolute top-3 left-3"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <label className="flex items-center justify-center w-8 h-8 rounded-md bg-white shadow-md border-2 border-gray-300 cursor-pointer hover:border-green-500 transition-colors"
-                             style={isSelected ? { backgroundColor: '#16a34a', borderColor: '#16a34a' } : {}}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => handleToggleProduct(product._id)}
-                          className="sr-only"
-                        />
-                        {isSelected && (
-                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                          </svg>
-                        )}
-                      </label>
-                    </div>
-                  )}
 
                   {/* Out of Stock Badge */}
                   {isOutOfStock && (
