@@ -978,229 +978,335 @@ const AdminDashboard = () => {
 
       {/* Product Modal */}
       {showProductModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-6 p-6">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', padding: '2rem' }}
+        >
           <div
-            className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] p-10 shadow-lg"
+            className="bg-white w-full max-h-[92vh] shadow-2xl"
             style={{
-              marginTop: '3rem',
-              marginBottom: '3rem',
+              maxWidth: '56rem',
+              borderRadius: '1rem',
               display: 'flex',
               flexDirection: 'column',
+              overflow: 'hidden',
             }}
           >
-            <h2 className="text-2xl font-bold text-primary mb-6">
-              {editingProduct ? 'Edit Product' : 'Add New Product'}
-            </h2>
+            {/* Header */}
+            <div
+              style={{
+                background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+                padding: '1.5rem 2rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <span style={{ fontSize: '1.6rem' }}>{editingProduct ? '✏️' : '📦'}</span>
+                <h2 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 700, color: '#fff', letterSpacing: '0.01em' }}>
+                  {editingProduct ? 'Edit Product' : 'Add New Product'}
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowProductModal(false)}
+                style={{
+                  background: 'rgba(255,255,255,0.2)',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '2.2rem',
+                  height: '2.2rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: '#fff',
+                  fontSize: '1.2rem',
+                  fontWeight: 700,
+                  transition: 'background 0.2s',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.35)')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.2)')}
+                title="Close"
+              >
+                ✕
+              </button>
+            </div>
 
+            {/* Scrollable form body */}
             <form
               onSubmit={handleProductSubmit}
-              className="space-y-5"
-              style={{ flex: 1, overflowY: 'auto' }}
+              style={{
+                flex: 1,
+                overflowY: 'auto',
+                padding: '2rem 2.5rem 1.5rem',
+              }}
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Product Name *
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={productForm.name}
-                    onChange={handleProductFormChange}
-                    required
-                    className="input-field"
-                    placeholder="Enter product name"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Category *
-                  </label>
-                  <select
-                    name="category"
-                    value={productForm.category}
-                    onChange={handleProductFormChange}
-                    required
-                    className="input-field"
-                  >
-                    <option value="Rice & Grains">Rice & Grains</option>
-                    <option value="Flours">Flours</option>
-                    <option value="Pulses & Dals">Pulses & Dals</option>
-                    <option value="Spices & Masalas">Spices & Masalas</option>
-                    <option value="Cooking Essentials">Cooking Essentials</option>
-                    <option value="Dairy Products">Dairy Products</option>
-                    <option value="Eggs & Bakery">Eggs & Bakery</option>
-                    <option value="Fruits (Daily Use)">Fruits (Daily Use)</option>
-                    <option value="Vegetables (Daily Use)">Vegetables (Daily Use)</option>
-                    <option value="Snacks & Biscuits">Snacks & Biscuits</option>
-                    <option value="Instant & Packed Foods">Instant & Packed Foods</option>
-                    <option value="Beverages">Beverages</option>
-                    <option value="Personal Care">Personal Care</option>
-                    <option value="Cleaning & Household">Cleaning & Household</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Price (₹) *
-                  </label>
-                  <input
-                    type="number"
-                    name="price"
-                    value={productForm.price}
-                    onChange={handleProductFormChange}
-                    required
-                    min="0"
-                    step="0.01"
-                    className="input-field"
-                    placeholder="0.00"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Cost Price (₹)
-                  </label>
-                  <input
-                    type="number"
-                    name="costPrice"
-                    value={productForm.costPrice}
-                    onChange={handleProductFormChange}
-                    min="0"
-                    step="0.01"
-                    className="input-field"
-                    placeholder="0.00"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Buying Date
-                  </label>
-                  <input
-                    type="date"
-                    name="buyingDate"
-                    value={productForm.buyingDate}
-                    onChange={handleProductFormChange}
-                    className="input-field"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Stock Quantity *
-                  </label>
-                  <input
-                    type="number"
-                    name="stock"
-                    value={productForm.stock}
-                    onChange={handleProductFormChange}
-                    required
-                    min="0"
-                    className="input-field"
-                    placeholder="0"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Cost Price (₹)
-                  </label>
-                  <input
-                    type="number"
-                    name="costPrice"
-                    value={productForm.costPrice}
-                    onChange={handleProductFormChange}
-                    min="0"
-                    step="0.01"
-                    className="input-field"
-                    placeholder="0.00"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Rating (0-5)
-                  </label>
-                  <input
-                    type="number"
-                    name="rating"
-                    value={productForm.rating}
-                    onChange={handleProductFormChange}
-                    min="0"
-                    max="5"
-                    step="0.1"
-                    className="input-field"
-                    placeholder="4.5"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Description *
-                </label>
-                <textarea
-                  name="description"
-                  value={productForm.description}
-                  onChange={handleProductFormChange}
-                  required
-                  rows="3"
-                  className="input-field resize-none"
-                  placeholder="Enter detailed product description"
-                ></textarea>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Image URL
-                </label>
-                <input
-                  type="url"
-                  name="image"
-                  value={productForm.image}
-                  onChange={handleProductFormChange}
-                  className="input-field"
-                  placeholder="https://example.com/image.jpg"
-                />
-                {productForm.image && (
-                  <div className="mt-2">
-                    {/** Avoid remote placeholder URLs even if typed */}
-                    {(() => {
-                      const previewSrc = !productForm.image || productForm.image.includes('via.placeholder.com')
-                        ? INVENTORY_PLACEHOLDER_IMAGE
-                        : productForm.image;
-                      return (
-                    <img
-                      src={previewSrc}
-                      alt="Preview"
-                      className="w-32 h-32 object-cover rounded border"
-                      onError={(e) => {
-                        if (e.target.src !== INVENTORY_PLACEHOLDER_IMAGE) {
-                          e.target.src = INVENTORY_PLACEHOLDER_IMAGE;
-                        }
-                      }}
+              {/* Section: Basic Info */}
+              <fieldset style={{ border: 'none', margin: 0, padding: 0, marginBottom: '1.75rem' }}>
+                <legend style={{ fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b', marginBottom: '1rem', display: 'block' }}>
+                  Basic Information
+                </legend>
+                <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: '1.25rem' }}>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700" style={{ marginBottom: '0.4rem' }}>
+                      Product Name <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={productForm.name}
+                      onChange={handleProductFormChange}
+                      required
+                      className="input-field"
+                      placeholder="Enter product name"
+                      style={{ padding: '0.65rem 0.9rem' }}
                     />
-                      );
-                    })()}
                   </div>
-                )}
-              </div>
 
-              <div className="flex gap-3 mt-6 justify-end">
-                <button
-                  type="submit"
-                  className="px-6 py-2 bg-success text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
-                >
-                  {editingProduct ? 'Update Product' : 'Create Product'}
-                </button>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700" style={{ marginBottom: '0.4rem' }}>
+                      Category <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <select
+                      name="category"
+                      value={productForm.category}
+                      onChange={handleProductFormChange}
+                      required
+                      className="input-field"
+                      style={{ padding: '0.65rem 0.9rem' }}
+                    >
+                      <option value="Rice & Grains">Rice & Grains</option>
+                      <option value="Flours">Flours</option>
+                      <option value="Pulses & Dals">Pulses & Dals</option>
+                      <option value="Spices & Masalas">Spices & Masalas</option>
+                      <option value="Cooking Essentials">Cooking Essentials</option>
+                      <option value="Dairy Products">Dairy Products</option>
+                      <option value="Eggs & Bakery">Eggs & Bakery</option>
+                      <option value="Fruits (Daily Use)">Fruits (Daily Use)</option>
+                      <option value="Vegetables (Daily Use)">Vegetables (Daily Use)</option>
+                      <option value="Snacks & Biscuits">Snacks & Biscuits</option>
+                      <option value="Instant & Packed Foods">Instant & Packed Foods</option>
+                      <option value="Beverages">Beverages</option>
+                      <option value="Personal Care">Personal Care</option>
+                      <option value="Cleaning & Household">Cleaning & Household</option>
+                    </select>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700" style={{ marginBottom: '0.4rem' }}>
+                      Description <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <textarea
+                      name="description"
+                      value={productForm.description}
+                      onChange={handleProductFormChange}
+                      required
+                      rows="3"
+                      className="input-field resize-none"
+                      placeholder="Enter detailed product description"
+                      style={{ padding: '0.65rem 0.9rem' }}
+                    ></textarea>
+                  </div>
+                </div>
+              </fieldset>
+
+              {/* Divider */}
+              <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '0 0 1.75rem' }} />
+
+              {/* Section: Pricing & Stock */}
+              <fieldset style={{ border: 'none', margin: 0, padding: 0, marginBottom: '1.75rem' }}>
+                <legend style={{ fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b', marginBottom: '1rem', display: 'block' }}>
+                  Pricing & Stock
+                </legend>
+                <div className="grid grid-cols-1 md:grid-cols-3" style={{ gap: '1.25rem' }}>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700" style={{ marginBottom: '0.4rem' }}>
+                      Selling Price (₹) <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <input
+                      type="number"
+                      name="price"
+                      value={productForm.price}
+                      onChange={handleProductFormChange}
+                      required
+                      min="0"
+                      step="0.01"
+                      className="input-field"
+                      placeholder="0.00"
+                      style={{ padding: '0.65rem 0.9rem' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700" style={{ marginBottom: '0.4rem' }}>
+                      Cost Price (₹)
+                    </label>
+                    <input
+                      type="number"
+                      name="costPrice"
+                      value={productForm.costPrice}
+                      onChange={handleProductFormChange}
+                      min="0"
+                      step="0.01"
+                      className="input-field"
+                      placeholder="0.00"
+                      style={{ padding: '0.65rem 0.9rem' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700" style={{ marginBottom: '0.4rem' }}>
+                      Stock Quantity <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <input
+                      type="number"
+                      name="stock"
+                      value={productForm.stock}
+                      onChange={handleProductFormChange}
+                      required
+                      min="0"
+                      className="input-field"
+                      placeholder="0"
+                      style={{ padding: '0.65rem 0.9rem' }}
+                    />
+                  </div>
+                </div>
+              </fieldset>
+
+              {/* Divider */}
+              <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '0 0 1.75rem' }} />
+
+              {/* Section: Additional Details */}
+              <fieldset style={{ border: 'none', margin: 0, padding: 0, marginBottom: '1.75rem' }}>
+                <legend style={{ fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b', marginBottom: '1rem', display: 'block' }}>
+                  Additional Details
+                </legend>
+                <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: '1.25rem' }}>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700" style={{ marginBottom: '0.4rem' }}>
+                      Buying Date
+                    </label>
+                    <input
+                      type="date"
+                      name="buyingDate"
+                      value={productForm.buyingDate}
+                      onChange={handleProductFormChange}
+                      className="input-field"
+                      style={{ padding: '0.65rem 0.9rem' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700" style={{ marginBottom: '0.4rem' }}>
+                      Rating (0-5)
+                    </label>
+                    <input
+                      type="number"
+                      name="rating"
+                      value={productForm.rating}
+                      onChange={handleProductFormChange}
+                      min="0"
+                      max="5"
+                      step="0.1"
+                      className="input-field"
+                      placeholder="4.0"
+                      style={{ padding: '0.65rem 0.9rem' }}
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700" style={{ marginBottom: '0.4rem' }}>
+                      Image URL
+                    </label>
+                    <input
+                      type="url"
+                      name="image"
+                      value={productForm.image}
+                      onChange={handleProductFormChange}
+                      className="input-field"
+                      placeholder="https://example.com/image.jpg"
+                      style={{ padding: '0.65rem 0.9rem' }}
+                    />
+                    {productForm.image && (
+                      <div style={{ marginTop: '0.75rem' }}>
+                        {(() => {
+                          const previewSrc = !productForm.image || productForm.image.includes('via.placeholder.com')
+                            ? INVENTORY_PLACEHOLDER_IMAGE
+                            : productForm.image;
+                          return (
+                            <img
+                              src={previewSrc}
+                              alt="Preview"
+                              style={{
+                                width: '7rem',
+                                height: '7rem',
+                                objectFit: 'cover',
+                                borderRadius: '0.5rem',
+                                border: '2px solid #e2e8f0',
+                              }}
+                              onError={(e) => {
+                                if (e.target.src !== INVENTORY_PLACEHOLDER_IMAGE) {
+                                  e.target.src = INVENTORY_PLACEHOLDER_IMAGE;
+                                }
+                              }}
+                            />
+                          );
+                        })()}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </fieldset>
+
+              {/* Footer actions */}
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  gap: '0.75rem',
+                  paddingTop: '1.25rem',
+                  borderTop: '1px solid #e2e8f0',
+                }}
+              >
                 <button
                   type="button"
                   onClick={() => setShowProductModal(false)}
-                  className="px-6 py-2 bg-danger text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
+                  style={{
+                    padding: '0.6rem 1.5rem',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '0.5rem',
+                    background: '#fff',
+                    color: '#475569',
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.borderColor = '#94a3b8'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
                 >
                   Cancel
+                </button>
+                <button
+                  type="submit"
+                  style={{
+                    padding: '0.6rem 2rem',
+                    border: 'none',
+                    borderRadius: '0.5rem',
+                    background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                    color: '#fff',
+                    fontWeight: 700,
+                    fontSize: '0.9rem',
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(34,197,94,0.3)',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 4px 14px rgba(34,197,94,0.45)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 2px 8px rgba(34,197,94,0.3)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                >
+                  {editingProduct ? '✓ Update Product' : '✓ Create Product'}
                 </button>
               </div>
             </form>
