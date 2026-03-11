@@ -198,9 +198,17 @@ const ProductListing = () => {
                     )}
                   </div>
                   
-                  <p className="text-xs mb-4 font-semibold" style={{ color: product.stock === 0 ? 'var(--color-danger)' : product.stock < 10 ? '#ea580c' : 'var(--color-text-light)' }}>
+                  <p className="text-xs mb-1 font-semibold" style={{ color: product.stock === 0 ? 'var(--color-danger)' : product.stock < 10 ? '#ea580c' : 'var(--color-text-light)' }}>
                     {product.stock === 0 ? 'Out of Stock' : `Stock: ${product.stock}`}
                   </p>
+
+                  {product.expiryDate && (
+                    <p className="text-xs mb-3 font-semibold" style={{ color: new Date(product.expiryDate) < new Date() ? '#dc2626' : '#16a34a' }}>
+                      {new Date(product.expiryDate) < new Date() ? '⚠ Expired: ' : 'Expiry: '}
+                      {new Date(product.expiryDate).toLocaleDateString()}
+                    </p>
+                  )}
+                  {!product.expiryDate && <div style={{ marginBottom: '0.75rem' }} />}
                   
                   <div className="d-flex gap-2">
                     <button

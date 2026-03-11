@@ -22,6 +22,7 @@ const AdminDashboard = () => {
     price: '',
     costPrice: '',
     buyingDate: '',
+    expiryDate: '',
     category: 'Rice & Grains',
     stock: '',
     image: '',
@@ -231,7 +232,8 @@ const AdminDashboard = () => {
       image: product.image || '',
       rating: product.rating || 4.0,
       sku: product.sku || '',
-      buyingDate: product.buyingDate ? product.buyingDate.split('T')[0] : ''
+      buyingDate: product.buyingDate ? product.buyingDate.split('T')[0] : '',
+      expiryDate: product.expiryDate ? product.expiryDate.split('T')[0] : ''
     });
     setShowProductModal(true);
   };
@@ -662,6 +664,7 @@ const AdminDashboard = () => {
                 <th className="p-3 text-center border border-gray-300 font-bold text-primary">Stock Status</th>
                 <th className="p-3 text-right border border-gray-300 font-bold text-primary">Total Profit</th>
                 <th className="p-3 text-left border border-gray-300 font-bold text-primary">Buying Date</th>
+                <th className="p-3 text-left border border-gray-300 font-bold text-primary">Expiry Date</th>
                 <th className="p-3 text-left border border-gray-300 font-bold text-primary">Actions</th>
                 </tr>
               </thead>
@@ -737,6 +740,13 @@ const AdminDashboard = () => {
                     </td>
                     <td className="p-3 border border-gray-300 text-sm">
                       {product.buyingDate ? new Date(product.buyingDate).toLocaleDateString() : '-'}
+                    </td>
+                    <td className="p-3 border border-gray-300 text-sm">
+                      {product.expiryDate ? (
+                        <span style={{ color: new Date(product.expiryDate) < new Date() ? '#dc2626' : '#16a34a', fontWeight: 600 }}>
+                          {new Date(product.expiryDate).toLocaleDateString()}
+                        </span>
+                      ) : '-'}
                     </td>
                     <td className="p-3 border border-gray-300">
                       <div className="flex gap-2 flex-wrap">
@@ -1293,6 +1303,20 @@ const AdminDashboard = () => {
                       type="date"
                       name="buyingDate"
                       value={productForm.buyingDate}
+                      onChange={handleProductFormChange}
+                      className="input-field"
+                      style={{ padding: '0.4rem 0.65rem', fontSize: '0.85rem' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#374151', marginBottom: '0.2rem' }}>
+                      Expiry Date
+                    </label>
+                    <input
+                      type="date"
+                      name="expiryDate"
+                      value={productForm.expiryDate}
                       onChange={handleProductFormChange}
                       className="input-field"
                       style={{ padding: '0.4rem 0.65rem', fontSize: '0.85rem' }}
