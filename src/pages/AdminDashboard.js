@@ -1294,13 +1294,14 @@ const AdminDashboard = () => {
 
                   <div>
                     <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#374151', marginBottom: '0.2rem' }}>
-                      Expiry Date
+                      Expiry Date <span style={{ color: '#ef4444' }}>*</span>
                     </label>
                     <input
                       type="date"
                       name="expiryDate"
                       value={productForm.expiryDate}
                       onChange={handleProductFormChange}
+                      required
                       className="input-field"
                       style={{ padding: '0.4rem 0.65rem', fontSize: '0.85rem' }}
                     />
