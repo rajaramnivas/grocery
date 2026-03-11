@@ -258,9 +258,10 @@ const ShoppingLists = () => {
             return (
               <div
                 key={product._id}
-                className={`border-2 rounded-lg overflow-hidden hover:shadow-lg transition-all ${
-                  isSelected ? 'border-green-500 bg-green-50' : 'border-gray-200 bg-white'
-                } ${isOutOfStock ? 'opacity-60' : ''}`}
+                onClick={() => !isOutOfStock && handleToggleProduct(product._id)}
+                className={`border-2 rounded-lg overflow-hidden hover:shadow-lg transition-all cursor-pointer ${
+                  isSelected ? 'border-green-500 bg-green-50 ring-2 ring-green-300' : 'border-gray-200 bg-white'
+                } ${isOutOfStock ? 'opacity-60 cursor-not-allowed' : ''}`}
                 style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
               >
                 {/* Product Image */}
@@ -280,13 +281,25 @@ const ShoppingLists = () => {
                   
                   {/* Selection Checkbox */}
                   {!isOutOfStock && (
-                    <div className="absolute top-2 left-2">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => handleToggleProduct(product._id)}
-                        className="w-6 h-6 cursor-pointer accent-green-600"
-                      />
+                    <div
+                      className="absolute top-3 left-3"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <label className="flex items-center justify-center w-8 h-8 rounded-md bg-white shadow-md border-2 border-gray-300 cursor-pointer hover:border-green-500 transition-colors"
+                             style={isSelected ? { backgroundColor: '#16a34a', borderColor: '#16a34a' } : {}}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleToggleProduct(product._id)}
+                          className="sr-only"
+                        />
+                        {isSelected && (
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </label>
                     </div>
                   )}
 
@@ -357,7 +370,7 @@ const ShoppingLists = () => {
 
                   {/* Add to Cart Button */}
                   <button
-                    onClick={() => handleAddSingleProduct(product._id)}
+                    onClick={(e) => { e.stopPropagation(); handleAddSingleProduct(product._id); }}
                     disabled={isOutOfStock}
                     className={`w-full py-2 rounded-lg font-semibold transition-colors ${
                       isOutOfStock
