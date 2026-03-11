@@ -266,6 +266,7 @@ const AdminDashboard = () => {
         price: parseFloat(productForm.price),
         costPrice: productForm.costPrice ? parseFloat(productForm.costPrice) : undefined,
         buyingDate: productForm.buyingDate ? new Date(productForm.buyingDate) : undefined,
+        expiryDate: productForm.expiryDate ? new Date(productForm.expiryDate) : undefined,
         stock: parseInt(productForm.stock),
         rating: parseFloat(productForm.rating)
       };
@@ -661,7 +662,6 @@ const AdminDashboard = () => {
                 <th className="p-3 text-right border border-gray-300 font-bold text-primary">Selling Price</th>
                 <th className="p-3 text-right border border-gray-300 font-bold text-primary">Profit/Unit</th>
                 <th className="p-3 text-center border border-gray-300 font-bold text-primary">Stock</th>
-                <th className="p-3 text-center border border-gray-300 font-bold text-primary">Stock Status</th>
                 <th className="p-3 text-right border border-gray-300 font-bold text-primary">Total Profit</th>
                 <th className="p-3 text-left border border-gray-300 font-bold text-primary">Buying Date</th>
                 <th className="p-3 text-left border border-gray-300 font-bold text-primary">Expiry Date</th>
@@ -708,23 +708,6 @@ const AdminDashboard = () => {
                     </td>
                     <td className={`p-3 border border-gray-300 text-center ${getStockColor(product.stock)}`}>
                       {product.stock}
-                    </td>
-                    <td className="p-3 border border-gray-300 text-center">
-                      {product.stock === 0 && (
-                        <span className="inline-block bg-red-100 text-red-800 px-3 py-1 rounded text-xs font-bold">
-                          OUT OF STOCK
-                        </span>
-                      )}
-                      {product.stock > 0 && product.stock < 10 && (
-                        <span className="inline-block bg-yellow-100 text-yellow-800 px-3 py-1 rounded text-xs font-bold">
-                          LOW STOCK
-                        </span>
-                      )}
-                      {product.stock >= 10 && (
-                        <span className="inline-block bg-green-100 text-green-800 px-3 py-1 rounded text-xs font-bold">
-                          HEALTHY
-                        </span>
-                      )}
                     </td>
                     <td className="p-3 border border-gray-300 text-right">
                       {profit ? (
