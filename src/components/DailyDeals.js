@@ -38,6 +38,11 @@ const DailyDeals = ({ showTitle = true }) => {
       return;
     }
 
+    if (!localStorage.getItem('userBudget')) {
+      alert('Please set your budget in the Cart page before adding products.');
+      return;
+    }
+
     setAddingToCart(productId);
     try {
       const response = await cartService.addToCart(productId, 1);

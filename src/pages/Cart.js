@@ -196,9 +196,10 @@ const Cart = () => {
 
   if (!cart || !cart.items || cart.items.length === 0) {
     return (
-      <div className="p-6 text-center">
-        <h2 className="text-3xl font-bold text-primary mb-2">Your Cart is Empty</h2>
-        <p className="text-gray-600">Add some products to your cart</p>
+      <div className="p-6 mx-auto" style={{ maxWidth: '56rem' }}>
+        <h2 className="text-3xl font-bold text-primary mb-2 text-center">Your Cart is Empty</h2>
+        <p className="text-gray-600 text-center">Add some products to your cart</p>
+        <BudgetTracker totalAmount={0} />
       </div>
     );
   }

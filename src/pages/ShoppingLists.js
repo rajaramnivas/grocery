@@ -63,6 +63,10 @@ const ShoppingLists = () => {
       navigate('/login');
       return;
     }
+    if (!localStorage.getItem('userBudget')) {
+      alert('Please set your budget in the Cart page before adding products.');
+      return;
+    }
     setAddingToCart(listId);
     setMessage(null);
     try {
@@ -115,6 +119,11 @@ const ShoppingLists = () => {
       return;
     }
 
+    if (!localStorage.getItem('userBudget')) {
+      alert('Please set your budget in the Cart page before adding products.');
+      return;
+    }
+
     if (selectedProducts.length === 0) {
       setMessage({ type: 'error', text: 'Please select at least one product' });
       setTimeout(() => setMessage(null), 3000);
@@ -148,6 +157,11 @@ const ShoppingLists = () => {
   const handleAddSingleProduct = async (productId) => {
     if (!token) {
       navigate('/login');
+      return;
+    }
+
+    if (!localStorage.getItem('userBudget')) {
+      alert('Please set your budget in the Cart page before adding products.');
       return;
     }
 

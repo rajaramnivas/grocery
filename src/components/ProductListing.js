@@ -214,6 +214,10 @@ const ProductListing = () => {
                     <button
                       onClick={() => {
                         if (token) {
+                          if (!localStorage.getItem('userBudget')) {
+                            alert('Please set your budget in the Cart page before adding products.');
+                            return;
+                          }
                           if (product.stock > 0) {
                             addToCart(product._id, 1, token);
                             alert('Added to cart!');

@@ -50,6 +50,10 @@ const Wishlist = () => {
   };
 
   const handleAddToCart = async (productId, productName) => {
+    if (!localStorage.getItem('userBudget')) {
+      alert('Please set your budget in the Cart page before adding products.');
+      return;
+    }
     try {
       await cartService.addToCart(productId, 1);
       await fetchCart(token);
