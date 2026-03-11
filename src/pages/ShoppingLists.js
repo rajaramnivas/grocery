@@ -264,24 +264,25 @@ const ShoppingLists = () => {
                 } ${isOutOfStock ? 'opacity-60 cursor-not-allowed' : ''}`}
                 style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
               >
-                {/* Selection Checkbox - positioned outside image overflow */}
+                {/* Selection Checkbox - top right corner, square shape */}
                 {!isOutOfStock && (
                   <div
-                    className="absolute top-3 left-3"
+                    className="absolute top-2 right-2"
                     style={{ zIndex: 20 }}
                     onClick={(e) => e.stopPropagation()}
                   >
                     <div
                       onClick={() => handleToggleProduct(product._id)}
-                      className="flex items-center justify-center w-8 h-8 rounded-md cursor-pointer transition-all duration-200"
+                      className="flex items-center justify-center w-7 h-7 cursor-pointer transition-all duration-200"
                       style={{
                         backgroundColor: isSelected ? '#16a34a' : '#ffffff',
-                        border: isSelected ? '2px solid #16a34a' : '2px solid #9ca3af',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                        border: isSelected ? '2px solid #16a34a' : '2px solid #6b7280',
+                        borderRadius: '4px',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
                       }}
                     >
                       {isSelected && (
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M5 13l4 4L19 7" />
                         </svg>
                       )}
