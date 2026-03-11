@@ -980,13 +980,14 @@ const AdminDashboard = () => {
       {showProductModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center"
-          style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', padding: '2rem' }}
+          style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', padding: '1rem' }}
         >
           <div
-            className="bg-white w-full max-h-[92vh] shadow-2xl"
+            className="bg-white w-full shadow-2xl"
             style={{
-              maxWidth: '56rem',
-              borderRadius: '1rem',
+              maxWidth: '40rem',
+              maxHeight: '80vh',
+              borderRadius: '0.75rem',
               display: 'flex',
               flexDirection: 'column',
               overflow: 'hidden',
@@ -996,15 +997,16 @@ const AdminDashboard = () => {
             <div
               style={{
                 background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
-                padding: '1.5rem 2rem',
+                padding: '0.75rem 1.25rem',
+                flexShrink: 0,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <span style={{ fontSize: '1.6rem' }}>{editingProduct ? '✏️' : '📦'}</span>
-                <h2 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 700, color: '#fff', letterSpacing: '0.01em' }}>
+                <span style={{ fontSize: '1.25rem' }}>{editingProduct ? '✏️' : '📦'}</span>
+                <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#fff', letterSpacing: '0.01em' }}>
                   {editingProduct ? 'Edit Product' : 'Add New Product'}
                 </h2>
               </div>
@@ -1040,17 +1042,18 @@ const AdminDashboard = () => {
               style={{
                 flex: 1,
                 overflowY: 'auto',
-                padding: '2rem 2.5rem 1.5rem',
+                padding: '1rem 1.25rem 0.75rem',
+                fontSize: '0.85rem',
               }}
             >
               {/* Section: Basic Info */}
-              <fieldset style={{ border: 'none', margin: 0, padding: 0, marginBottom: '1.75rem' }}>
-                <legend style={{ fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b', marginBottom: '1rem', display: 'block' }}>
+              <fieldset style={{ border: 'none', margin: 0, padding: 0, marginBottom: '0.9rem' }}>
+                <legend style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b', marginBottom: '0.5rem', display: 'block' }}>
                   Basic Information
                 </legend>
-                <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: '1.25rem' }}>
+                <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: '0.6rem' }}>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700" style={{ marginBottom: '0.4rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#374151', marginBottom: '0.2rem' }}>
                       Product Name <span style={{ color: '#ef4444' }}>*</span>
                     </label>
                     <input
@@ -1061,12 +1064,12 @@ const AdminDashboard = () => {
                       required
                       className="input-field"
                       placeholder="Enter product name"
-                      style={{ padding: '0.65rem 0.9rem' }}
+                      style={{ padding: '0.4rem 0.65rem', fontSize: '0.85rem' }}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700" style={{ marginBottom: '0.4rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#374151', marginBottom: '0.2rem' }}>
                       Category <span style={{ color: '#ef4444' }}>*</span>
                     </label>
                     <select
@@ -1075,7 +1078,7 @@ const AdminDashboard = () => {
                       onChange={handleProductFormChange}
                       required
                       className="input-field"
-                      style={{ padding: '0.65rem 0.9rem' }}
+                      style={{ padding: '0.4rem 0.65rem', fontSize: '0.85rem' }}
                     >
                       <option value="Rice & Grains">Rice & Grains</option>
                       <option value="Flours">Flours</option>
@@ -1095,7 +1098,7 @@ const AdminDashboard = () => {
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700" style={{ marginBottom: '0.4rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#374151', marginBottom: '0.2rem' }}>
                       Description <span style={{ color: '#ef4444' }}>*</span>
                     </label>
                     <textarea
@@ -1103,26 +1106,26 @@ const AdminDashboard = () => {
                       value={productForm.description}
                       onChange={handleProductFormChange}
                       required
-                      rows="3"
+                      rows="2"
                       className="input-field resize-none"
                       placeholder="Enter detailed product description"
-                      style={{ padding: '0.65rem 0.9rem' }}
+                      style={{ padding: '0.4rem 0.65rem', fontSize: '0.85rem' }}
                     ></textarea>
                   </div>
                 </div>
               </fieldset>
 
               {/* Divider */}
-              <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '0 0 1.75rem' }} />
+              <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '0 0 0.9rem' }} />
 
               {/* Section: Pricing & Stock */}
-              <fieldset style={{ border: 'none', margin: 0, padding: 0, marginBottom: '1.75rem' }}>
-                <legend style={{ fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b', marginBottom: '1rem', display: 'block' }}>
+              <fieldset style={{ border: 'none', margin: 0, padding: 0, marginBottom: '0.9rem' }}>
+                <legend style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b', marginBottom: '0.5rem', display: 'block' }}>
                   Pricing & Stock
                 </legend>
-                <div className="grid grid-cols-1 md:grid-cols-3" style={{ gap: '1.25rem' }}>
+                <div className="grid grid-cols-1 md:grid-cols-3" style={{ gap: '0.6rem' }}>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700" style={{ marginBottom: '0.4rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#374151', marginBottom: '0.2rem' }}>
                       Selling Price (₹) <span style={{ color: '#ef4444' }}>*</span>
                     </label>
                     <input
@@ -1135,12 +1138,12 @@ const AdminDashboard = () => {
                       step="0.01"
                       className="input-field"
                       placeholder="0.00"
-                      style={{ padding: '0.65rem 0.9rem' }}
+                      style={{ padding: '0.4rem 0.65rem', fontSize: '0.85rem' }}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700" style={{ marginBottom: '0.4rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#374151', marginBottom: '0.2rem' }}>
                       Cost Price (₹)
                     </label>
                     <input
@@ -1152,12 +1155,12 @@ const AdminDashboard = () => {
                       step="0.01"
                       className="input-field"
                       placeholder="0.00"
-                      style={{ padding: '0.65rem 0.9rem' }}
+                      style={{ padding: '0.4rem 0.65rem', fontSize: '0.85rem' }}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700" style={{ marginBottom: '0.4rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#374151', marginBottom: '0.2rem' }}>
                       Stock Quantity <span style={{ color: '#ef4444' }}>*</span>
                     </label>
                     <input
@@ -1169,23 +1172,23 @@ const AdminDashboard = () => {
                       min="0"
                       className="input-field"
                       placeholder="0"
-                      style={{ padding: '0.65rem 0.9rem' }}
+                      style={{ padding: '0.4rem 0.65rem', fontSize: '0.85rem' }}
                     />
                   </div>
                 </div>
               </fieldset>
 
               {/* Divider */}
-              <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '0 0 1.75rem' }} />
+              <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '0 0 0.9rem' }} />
 
               {/* Section: Additional Details */}
-              <fieldset style={{ border: 'none', margin: 0, padding: 0, marginBottom: '1.75rem' }}>
-                <legend style={{ fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b', marginBottom: '1rem', display: 'block' }}>
+              <fieldset style={{ border: 'none', margin: 0, padding: 0, marginBottom: '0.9rem' }}>
+                <legend style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b', marginBottom: '0.5rem', display: 'block' }}>
                   Additional Details
                 </legend>
-                <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: '1.25rem' }}>
+                <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: '0.6rem' }}>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700" style={{ marginBottom: '0.4rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#374151', marginBottom: '0.2rem' }}>
                       Buying Date
                     </label>
                     <input
@@ -1194,12 +1197,12 @@ const AdminDashboard = () => {
                       value={productForm.buyingDate}
                       onChange={handleProductFormChange}
                       className="input-field"
-                      style={{ padding: '0.65rem 0.9rem' }}
+                      style={{ padding: '0.4rem 0.65rem', fontSize: '0.85rem' }}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700" style={{ marginBottom: '0.4rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#374151', marginBottom: '0.2rem' }}>
                       Rating (0-5)
                     </label>
                     <input
@@ -1212,12 +1215,12 @@ const AdminDashboard = () => {
                       step="0.1"
                       className="input-field"
                       placeholder="4.0"
-                      style={{ padding: '0.65rem 0.9rem' }}
+                      style={{ padding: '0.4rem 0.65rem', fontSize: '0.85rem' }}
                     />
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700" style={{ marginBottom: '0.4rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#374151', marginBottom: '0.2rem' }}>
                       Image URL
                     </label>
                     <input
@@ -1227,10 +1230,10 @@ const AdminDashboard = () => {
                       onChange={handleProductFormChange}
                       className="input-field"
                       placeholder="https://example.com/image.jpg"
-                      style={{ padding: '0.65rem 0.9rem' }}
+                      style={{ padding: '0.4rem 0.65rem', fontSize: '0.85rem' }}
                     />
                     {productForm.image && (
-                      <div style={{ marginTop: '0.75rem' }}>
+                      <div style={{ marginTop: '0.5rem' }}>
                         {(() => {
                           const previewSrc = !productForm.image || productForm.image.includes('via.placeholder.com')
                             ? INVENTORY_PLACEHOLDER_IMAGE
@@ -1240,10 +1243,10 @@ const AdminDashboard = () => {
                               src={previewSrc}
                               alt="Preview"
                               style={{
-                                width: '7rem',
-                                height: '7rem',
+                                width: '4.5rem',
+                                height: '4.5rem',
                                 objectFit: 'cover',
-                                borderRadius: '0.5rem',
+                                borderRadius: '0.4rem',
                                 border: '2px solid #e2e8f0',
                               }}
                               onError={(e) => {
@@ -1265,8 +1268,8 @@ const AdminDashboard = () => {
                 style={{
                   display: 'flex',
                   justifyContent: 'flex-end',
-                  gap: '0.75rem',
-                  paddingTop: '1.25rem',
+                  gap: '0.6rem',
+                  paddingTop: '0.75rem',
                   borderTop: '1px solid #e2e8f0',
                 }}
               >
@@ -1274,13 +1277,13 @@ const AdminDashboard = () => {
                   type="button"
                   onClick={() => setShowProductModal(false)}
                   style={{
-                    padding: '0.6rem 1.5rem',
+                    padding: '0.45rem 1.2rem',
                     border: '1px solid #cbd5e1',
-                    borderRadius: '0.5rem',
+                    borderRadius: '0.4rem',
                     background: '#fff',
                     color: '#475569',
                     fontWeight: 600,
-                    fontSize: '0.9rem',
+                    fontSize: '0.82rem',
                     cursor: 'pointer',
                     transition: 'all 0.2s',
                   }}
@@ -1292,13 +1295,13 @@ const AdminDashboard = () => {
                 <button
                   type="submit"
                   style={{
-                    padding: '0.6rem 2rem',
+                    padding: '0.45rem 1.5rem',
                     border: 'none',
-                    borderRadius: '0.5rem',
+                    borderRadius: '0.4rem',
                     background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
                     color: '#fff',
                     fontWeight: 700,
-                    fontSize: '0.9rem',
+                    fontSize: '0.82rem',
                     cursor: 'pointer',
                     boxShadow: '0 2px 8px rgba(34,197,94,0.3)',
                     transition: 'all 0.2s',
