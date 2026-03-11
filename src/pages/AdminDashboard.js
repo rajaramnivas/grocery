@@ -46,6 +46,16 @@ const AdminDashboard = () => {
     // Shopping lists tab has its own component that handles fetching
   }, [activeTab]);
 
+  // Lock background scroll when the product modal is open
+  useEffect(() => {
+    if (showProductModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [showProductModal]);
+
   // Auto-refresh inventory data periodically when on the Inventory tab
   useEffect(() => {
     if (activeTab !== 'inventory') return;
@@ -980,7 +990,7 @@ const AdminDashboard = () => {
       {showProductModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center"
-          style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', padding: '1rem' }}
+          style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', padding: '1rem', overscrollBehavior: 'contain' }}
         >
           <div
             className="bg-white w-full shadow-2xl"
